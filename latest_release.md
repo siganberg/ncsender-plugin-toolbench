@@ -1,4 +1,4 @@
 ## What's Changed
 
-### 🐛 Bug Fixes
-- Fixed horizontal scroll issue in portrait mode
+### 🔧 Improvements
+- Reorganized Jointer/Cutter interface to use a cleaner card-based layout for better visual organization
