@@ -816,7 +816,7 @@ export async function onLoad(ctx) {
         .jointer-layout {
           display: flex;
           flex-direction: column;
-          max-width: 460px;
+          max-width: 800px;
           width: 100%;
         }
         .form-column {
@@ -1071,10 +1071,6 @@ export async function onLoad(ctx) {
                     <label for="leadInOutDistance">Lead-In/Out (${distanceUnit})</label>
                     <input type="number" id="leadInOutDistance" step="0.1" value="${settings.leadInOutDistance}">
                   </div>
-                  <div class="form-group">
-                    <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
-                    <input type="number" id="bitDiameter" step="0.01" value="${settings.bitDiameter}">
-                  </div>
                 </div>
               </div>
 
@@ -1082,9 +1078,15 @@ export async function onLoad(ctx) {
                 <div class="form-card-title">Machine Settings</div>
                 <div class="form-row">
                   <div class="form-group">
+                    <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
+                    <input type="number" id="bitDiameter" step="0.01" value="${settings.bitDiameter}">
+                  </div>
+                  <div class="form-group">
                     <label for="feedRate">Feed Rate (${feedRateUnit})</label>
                     <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
                   </div>
+                </div>
+                <div class="form-row">
                   <div class="form-group">
                     <label for="spindleRpm">Spindle RPM</label>
                     <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
