@@ -257,6 +257,12 @@ export async function onLoad(ctx) {
           background: var(--color-accent);
           color: white;
         }
+
+        @media (max-width: 600px) {
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+        }
       </style>
 
       <div class="surfacing-layout">
@@ -981,6 +987,12 @@ export async function onLoad(ctx) {
         .btn-primary {
           background: var(--color-accent);
           color: white;
+        }
+
+        @media (max-width: 600px) {
+          .form-row {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
 
@@ -1726,6 +1738,15 @@ export async function onLoad(ctx) {
           padding-bottom: 12px;
           border-bottom: 1px solid var(--color-border);
           text-align: center;
+        }
+
+        @media (max-width: 600px) {
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+          .form-cards-container {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
 
