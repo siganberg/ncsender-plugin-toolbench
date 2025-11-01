@@ -835,11 +835,37 @@ export async function onLoad(ctx) {
           flex-direction: column;
           gap: 12px;
         }
+
+        .form-cards-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        .form-card {
+          background: var(--color-surface-secondary);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-medium);
+          padding: 20px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-card-title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--color-text-primary);
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--color-border);
+          text-align: center;
+        }
+
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 12px;
+          gap: 16px;
+          margin-bottom: 16px;
         }
         .form-row.single {
           grid-template-columns: 1fr;
@@ -993,93 +1019,103 @@ export async function onLoad(ctx) {
           .form-row {
             grid-template-columns: 1fr;
           }
+          .form-cards-container {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
 
       <div class="jointer-layout">
         <div class="form-column">
           <form id="jointerForm" novalidate>
-            <div class="form-section">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="edgeLength">Edge Length (${distanceUnit})</label>
-                  <input type="number" id="edgeLength" step="0.1" value="${settings.edgeLength}">
+            <div class="form-cards-container">
+              <div class="form-card">
+                <div class="form-card-title">Dimensions</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edgeLength">Edge Length (${distanceUnit})</label>
+                    <input type="number" id="edgeLength" step="0.1" value="${settings.edgeLength}">
+                  </div>
+                  <div class="form-group">
+                    <label for="edge">Edge</label>
+                    <select id="edge" class="orientation-select">
+                      <option value="left" ${settings.edge === 'left' ? 'selected' : ''}>Left</option>
+                      <option value="right" ${settings.edge === 'right' ? 'selected' : ''}>Right</option>
+                      <option value="front" ${settings.edge === 'front' ? 'selected' : ''}>Front</option>
+                      <option value="back" ${settings.edge === 'back' ? 'selected' : ''}>Back</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="edge">Edge</label>
-                  <select id="edge" class="orientation-select">
-                    <option value="left" ${settings.edge === 'left' ? 'selected' : ''}>Left</option>
-                    <option value="right" ${settings.edge === 'right' ? 'selected' : ''}>Right</option>
-                    <option value="front" ${settings.edge === 'front' ? 'selected' : ''}>Front</option>
-                    <option value="back" ${settings.edge === 'back' ? 'selected' : ''}>Back</option>
-                  </select>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="depthOfCut">Depth of Cut (${distanceUnit})</label>
+                    <input type="number" id="depthOfCut" step="0.1" value="${settings.depthOfCut}">
+                  </div>
+                  <div class="form-group">
+                    <label for="materialThickness">Material Thickness (${distanceUnit})</label>
+                    <input type="number" id="materialThickness" step="0.1" value="${settings.materialThickness}">
+                  </div>
                 </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="depthOfCut">Depth of Cut (${distanceUnit})</label>
-                  <input type="number" id="depthOfCut" step="0.1" value="${settings.depthOfCut}">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="trimWidth">Trim Width (${distanceUnit})</label>
+                    <input type="number" id="trimWidth" step="0.01" value="${settings.trimWidth}">
+                  </div>
+                  <div class="form-group">
+                    <label for="numberOfPasses">Number of Passes</label>
+                    <input type="number" id="numberOfPasses" step="1" value="${settings.numberOfPasses}">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="materialThickness">Material Thickness (${distanceUnit})</label>
-                  <input type="number" id="materialThickness" step="0.1" value="${settings.materialThickness}">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="trimWidth">Trim Width (${distanceUnit})</label>
-                  <input type="number" id="trimWidth" step="0.01" value="${settings.trimWidth}">
-                </div>
-                <div class="form-group">
-                  <label for="numberOfPasses">Number of Passes</label>
-                  <input type="number" id="numberOfPasses" step="1" value="${settings.numberOfPasses}">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="leadInOutDistance">Lead-In/Out (${distanceUnit})</label>
-                  <input type="number" id="leadInOutDistance" step="0.1" value="${settings.leadInOutDistance}">
-                </div>
-                <div class="form-group">
-                  <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
-                  <input type="number" id="bitDiameter" step="0.01" value="${settings.bitDiameter}">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="feedRate">Feed Rate (${feedRateUnit})</label>
-                  <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
-                </div>
-                <div class="form-group">
-                  <label for="spindleRpm">Spindle RPM</label>
-                  <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="leadInOutDistance">Lead-In/Out (${distanceUnit})</label>
+                    <input type="number" id="leadInOutDistance" step="0.1" value="${settings.leadInOutDistance}">
+                  </div>
+                  <div class="form-group">
+                    <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
+                    <input type="number" id="bitDiameter" step="0.01" value="${settings.bitDiameter}">
+                  </div>
                 </div>
               </div>
-              <div class="form-row delay-row">
-                <div class="delay-label">Delay</div>
-                <div class="delay-control">
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="spindleDelay" ${settings.spindleDelay ? 'checked' : ''}>
-                    <span class="toggle-slider"></span>
-                  </label>
+
+              <div class="form-card">
+                <div class="form-card-title">Machine Settings</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="feedRate">Feed Rate (${feedRateUnit})</label>
+                    <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
+                  </div>
+                  <div class="form-group">
+                    <label for="spindleRpm">Spindle RPM</label>
+                    <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
+                  </div>
                 </div>
-              </div>
-              <div class="form-row coolant-row">
-                <div class="coolant-label">Coolant</div>
-                <div class="coolant-controls">
-                  <div class="toggle-group">
-                    <label for="mistM7">Mist</label>
+                <div class="form-row delay-row">
+                  <div class="delay-label">Delay</div>
+                  <div class="delay-control">
                     <label class="toggle-switch">
-                      <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
+                      <input type="checkbox" id="spindleDelay" ${settings.spindleDelay ? 'checked' : ''}>
                       <span class="toggle-slider"></span>
                     </label>
                   </div>
-                  <div class="toggle-group">
-                    <label for="floodM8">Flood</label>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
-                      <span class="toggle-slider"></span>
-                    </label>
+                </div>
+                <div class="form-row coolant-row">
+                  <div class="coolant-label">Coolant</div>
+                  <div class="coolant-controls">
+                    <div class="toggle-group">
+                      <label for="mistM7">Mist</label>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                    <div class="toggle-group">
+                      <label for="floodM8">Flood</label>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
