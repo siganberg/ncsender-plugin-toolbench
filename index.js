@@ -51,7 +51,7 @@ export async function onLoad(ctx) {
         .planer-layout {
           display: flex;
           flex-direction: column;
-          max-width: 1000px;
+          max-width: 800px;
           width: 100%;
           overflow-x: hidden;
         }
@@ -186,6 +186,9 @@ export async function onLoad(ctx) {
         input[type="number"] {
           padding: 8px;
           text-align: center;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           font-size: 0.9rem;
@@ -363,7 +366,7 @@ export async function onLoad(ctx) {
                     <input type="number" id="bitDiameter" step="0.1" value="${settings.bitDiameter}">
                   </div>
                   <div class="form-group">
-                    <label for="feedRate">Feed Rate (${feedRateUnit})</label>
+                    <label for="feedRate">Feed Rate</label>
                     <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
                   </div>
                 </div>
@@ -373,7 +376,7 @@ export async function onLoad(ctx) {
                     <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
                   </div>
                   <div class="form-group">
-                    <label for="spindleDelay">Spindle Delay (seconds)</label>
+                    <label for="spindleDelay">Spindle Delay</label>
                     <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}">
                   </div>
                 </div>
@@ -896,7 +899,7 @@ export async function onLoad(ctx) {
         .jointer-layout {
           display: flex;
           flex-direction: column;
-          max-width: 1000px;
+          max-width: 800px;
           width: 100%;
         }
         .form-column {
@@ -992,6 +995,9 @@ export async function onLoad(ctx) {
         input[type="number"] {
           padding: 8px;
           text-align: center;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           font-size: 0.9rem;
@@ -1176,7 +1182,7 @@ export async function onLoad(ctx) {
                     <input type="number" id="bitDiameter" step="0.01" value="${settings.bitDiameter}">
                   </div>
                   <div class="form-group">
-                    <label for="feedRate">Feed Rate (${feedRateUnit})</label>
+                    <label for="feedRate">Feed Rate</label>
                     <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
                   </div>
                 </div>
@@ -1186,7 +1192,7 @@ export async function onLoad(ctx) {
                     <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
                   </div>
                   <div class="form-group">
-                    <label for="spindleDelay">Spindle Delay (seconds)</label>
+                    <label for="spindleDelay">Spindle Delay</label>
                     <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}">
                   </div>
                 </div>
@@ -1699,7 +1705,7 @@ export async function onLoad(ctx) {
           display: flex;
           flex-direction: column;
           height: 100%;
-          max-width: 1000px;
+          max-width: 800px;
           margin: 0 auto;
           overflow-x: hidden;
         }
@@ -1789,6 +1795,9 @@ export async function onLoad(ctx) {
           color: var(--color-text-primary);
           font-size: 0.9rem;
           text-align: center;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .form-group input:disabled {
@@ -2003,7 +2012,7 @@ export async function onLoad(ctx) {
                   <input type="number" id="bitDiameter" min="0.1" step="0.01" value="${settings.toolDiameter}" required>
                 </div>
                 <div class="form-group">
-                  <label for="feedRate">Feed Rate (${distanceUnit}/min)</label>
+                  <label for="feedRate">Feed Rate</label>
                   <input type="number" id="feedRate" min="1" step="1" value="${settings.feedRate}" required>
                 </div>
               </div>
@@ -2014,7 +2023,7 @@ export async function onLoad(ctx) {
                   <input type="number" id="spindleRPM" min="1" max="24000" step="100" value="${settings.spindleRPM}" required>
                 </div>
                 <div class="form-group">
-                  <label for="spindleDelay">Spindle Delay (seconds)</label>
+                  <label for="spindleDelay">Spindle Delay</label>
                   <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}" required>
                 </div>
               </div>
