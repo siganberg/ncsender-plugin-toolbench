@@ -1,4 +1,6 @@
 ## What's Changed
 
-### 🐛 Bug Fixes
-- Fixed horizontal scrolling issue in Electron app
+### 🔧 Improvements
+- Improved form layout width for better readability
+- Enhanced input field styling with proper width constraints
+- Simplified form labels for cleaner interface
