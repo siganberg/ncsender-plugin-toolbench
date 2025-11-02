@@ -37,19 +37,21 @@ export async function onLoad(ctx) {
       bitDiameter: convertToDisplay(savedSurfacingSettings.bitDiameter ?? 25.4),
       stepover: savedSurfacingSettings.stepover ?? 80,
       feedRate: convertToDisplay(savedSurfacingSettings.feedRate ?? 2000),
+      plungeFeedRate: convertToDisplay(savedSurfacingSettings.plungeFeedRate ?? 200),
       spindleRpm: savedSurfacingSettings.spindleRpm ?? 15000,
-      spindleDelay: savedSurfacingSettings.spindleDelay ?? false,
+      spindleDelay: savedSurfacingSettings.spindleDelay ?? 5,
       patternType: defaultPatternType,
       mistM7: savedSurfacingSettings.mistM7 ?? false,
       floodM8: savedSurfacingSettings.floodM8 ?? false
     };
 
-    ctx.showDialog('Surfacing Operation', `
+    ctx.showDialog('Surfacing Operation',
+      /* html */ `
       <style>
         .surfacing-layout {
           display: flex;
           flex-direction: column;
-          max-width: 460px;
+          max-width: 1000px;
           width: 100%;
         }
         .form-column {
@@ -68,6 +70,32 @@ export async function onLoad(ctx) {
           flex-direction: column;
           gap: 12px;
         }
+
+        .form-cards-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        .form-card {
+          background: var(--color-surface-secondary);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-medium);
+          padding: 20px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-card-title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--color-text-primary);
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--color-border);
+          text-align: center;
+        }
+
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -79,6 +107,7 @@ export async function onLoad(ctx) {
           display: flex;
           align-items: center;
           gap: 0;
+          justify-content: space-between;
         }
         .form-row.spindle-row {
           align-items: center;
@@ -109,6 +138,11 @@ export async function onLoad(ctx) {
           flex: 1;
           display: flex;
           gap: 24px;
+          justify-content: flex-end;
+        }
+        .coolant-control {
+          flex: 1;
+          display: flex;
           justify-content: flex-end;
         }
         .form-group {
@@ -262,84 +296,90 @@ export async function onLoad(ctx) {
           .form-row {
             grid-template-columns: 1fr;
           }
+          .form-cards-container {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
 
       <div class="surfacing-layout">
         <div class="form-column">
           <form id="surfacingForm" novalidate>
-            <div class="form-section">
-              <div class="form-row orientation-row">
-                <label class="orientation-label" for="patternType">Direction</label>
-                <select id="patternType" class="orientation-select">
-                  <option value="zigzagX" ${settings.patternType === 'zigzagX' ? 'selected' : ''}>Horizontal</option>
-                  <option value="zigzagY" ${settings.patternType === 'zigzagY' ? 'selected' : ''}>Vertical</option>
-                  <option value="spiral" ${settings.patternType === 'spiral' ? 'selected' : ''}>Spiral</option>
-                </select>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="xDimension">X Dimension (${distanceUnit})</label>
-                  <input type="number" id="xDimension" step="0.1" value="${settings.xDimension}">
+            <div class="form-cards-container">
+              <div class="form-card">
+                <div class="form-card-title">Dimensions</div>
+                <div class="form-row orientation-row">
+                  <label class="orientation-label" for="patternType">Direction</label>
+                  <select id="patternType" class="orientation-select">
+                    <option value="zigzagX" ${settings.patternType === 'zigzagX' ? 'selected' : ''}>Horizontal</option>
+                    <option value="zigzagY" ${settings.patternType === 'zigzagY' ? 'selected' : ''}>Vertical</option>
+                    <option value="spiral" ${settings.patternType === 'spiral' ? 'selected' : ''}>Spiral</option>
+                  </select>
                 </div>
-                <div class="form-group">
-                  <label for="yDimension">Y Dimension (${distanceUnit})</label>
-                  <input type="number" id="yDimension" step="0.1" value="${settings.yDimension}">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="xDimension">X Dimension (${distanceUnit})</label>
+                    <input type="number" id="xDimension" step="0.1" value="${settings.xDimension}">
+                  </div>
+                  <div class="form-group">
+                    <label for="yDimension">Y Dimension (${distanceUnit})</label>
+                    <input type="number" id="yDimension" step="0.1" value="${settings.yDimension}">
+                  </div>
                 </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="depthOfCut">Depth of Cut (${distanceUnit})</label>
-                  <input type="number" id="depthOfCut" step="0.1" value="${settings.depthOfCut}">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="depthOfCut">Depth of Cut (${distanceUnit})</label>
+                    <input type="number" id="depthOfCut" step="0.1" value="${settings.depthOfCut}">
+                  </div>
+                  <div class="form-group">
+                    <label for="targetDepth">Target Depth (${distanceUnit})</label>
+                    <input type="number" id="targetDepth" step="0.1" value="${settings.targetDepth}">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="targetDepth">Target Depth (${distanceUnit})</label>
-                  <input type="number" id="targetDepth" step="0.1" value="${settings.targetDepth}">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
-                  <input type="number" id="bitDiameter" step="0.1" value="${settings.bitDiameter}">
-                </div>
-                <div class="form-group">
-                  <label for="stepover">Stepover (%)</label>
-                  <input type="number" id="stepover" step="1" value="${settings.stepover}">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="feedRate">Feed Rate (${feedRateUnit})</label>
-                  <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
-                </div>
-                <div class="form-group">
-                  <label for="spindleRpm">Spindle RPM</label>
-                  <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="stepover">Stepover (%)</label>
+                    <input type="number" id="stepover" step="1" value="${settings.stepover}">
+                  </div>
                 </div>
               </div>
-              <div class="form-row delay-row">
-                <div class="delay-label">Delay</div>
-                <div class="delay-control">
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="spindleDelay" ${settings.spindleDelay ? 'checked' : ''}>
-                    <span class="toggle-slider"></span>
-                  </label>
+
+              <div class="form-card">
+                <div class="form-card-title">Machine Settings</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
+                    <input type="number" id="bitDiameter" step="0.1" value="${settings.bitDiameter}">
+                  </div>
+                  <div class="form-group">
+                    <label for="feedRate">Feed Rate (${feedRateUnit})</label>
+                    <input type="number" id="feedRate" step="1" value="${settings.feedRate}">
+                  </div>
                 </div>
-              </div>
-              <div class="form-row coolant-row">
-                <div class="coolant-label">Coolant</div>
-                <div class="coolant-controls">
-                  <div class="toggle-group">
-                    <label for="floodM8">Flood</label>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="spindleRpm">Spindle RPM</label>
+                    <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
+                  </div>
+                  <div class="form-group">
+                    <label for="spindleDelay">Spindle Delay (seconds)</label>
+                    <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}">
+                  </div>
+                </div>
+                <div class="form-row coolant-row">
+                  <div class="coolant-label">Mist Coolant</div>
+                  <div class="coolant-control">
                     <label class="toggle-switch">
-                      <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
+                      <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
                       <span class="toggle-slider"></span>
                     </label>
                   </div>
-                  <div class="toggle-group">
-                    <label for="mistM7">Mist</label>
+                </div>
+                <div class="form-row coolant-row">
+                  <div class="coolant-label">Flood Coolant</div>
+                  <div class="coolant-control">
                     <label class="toggle-switch">
-                      <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
+                      <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
                       <span class="toggle-slider"></span>
                     </label>
                   </div>
@@ -372,7 +412,8 @@ export async function onLoad(ctx) {
             bitDiameter: { min: 0.03, max: 2, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
             feedRate: { min: 40, max: 800, label: 'Feed Rate' },
-            spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' }
+            spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
+            spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           } : {
             xDimension: { min: 10, max: Infinity, label: 'X Dimension' },
             yDimension: { min: 10, max: Infinity, label: 'Y Dimension' },
@@ -381,7 +422,8 @@ export async function onLoad(ctx) {
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
             feedRate: { min: 1000, max: 20000, label: 'Feed Rate' },
-            spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' }
+            spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
+            spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           };
 
           // Create tooltip element
@@ -493,7 +535,7 @@ export async function onLoad(ctx) {
           }
 
           function addStartupSequence(gcode, options) {
-            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth } = options;
+            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate } = options;
 
             if (mistM7) {
               gcode.push('M7 ; Mist coolant on');
@@ -504,11 +546,11 @@ export async function onLoad(ctx) {
             if (spindleRpm > 0) {
               gcode.push(\`M3 S\${spindleRpm} ; Start spindle\`);
             }
-            if (spindleRpm > 0 && spindleDelay) {
-              gcode.push('G4 P5 ; Spindle spin-up delay');
+            if (spindleRpm > 0 && spindleDelay > 0) {
+              gcode.push(\`G4 P\${spindleDelay} ; Wait \${spindleDelay} seconds\`);
             }
             gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-            gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+            gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
           }
 
           function generateSurfacingGcode(params) {
@@ -517,7 +559,8 @@ export async function onLoad(ctx) {
               xDimension, yDimension,
               depthOfCut, targetDepth,
               bitDiameter, stepover,
-              feedRate, spindleRpm,
+              feedRate, plungeFeedRate,
+              spindleRpm,
               patternType, spindleDelay,
               mistM7, floodM8,
               isImperial
@@ -568,10 +611,10 @@ export async function onLoad(ctx) {
 
               // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
               if (depthPass === 0) {
-                addStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth });
+                addStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate });
               } else {
                 gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+                gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
               }
 
               if (isSpiral) {
@@ -693,8 +736,14 @@ export async function onLoad(ctx) {
               spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
               mistM7: document.getElementById('mistM7').checked,
               floodM8: document.getElementById('floodM8').checked,
-              spindleDelay: document.getElementById('spindleDelay').checked
+              spindleDelay: parseInt(document.getElementById('spindleDelay').value)
             };
+
+            // Get current saved plungeFeedRate from settings
+            const response = await fetch('/api/plugins/com.ncsender.toolbench/settings');
+            const savedSettings = response.ok ? await response.json() : {};
+            const convertToDisplay = (value) => isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value;
+            const currentPlungeFeedRate = convertToDisplay(savedSettings.surfacing?.plungeFeedRate ?? 200);
 
             // Convert to metric for storage
             const convertToMetric = (value) => isImperial ? value * INCH_TO_MM : value;
@@ -707,6 +756,7 @@ export async function onLoad(ctx) {
                 bitDiameter: convertToMetric(displayValues.bitDiameter),
                 stepover: displayValues.stepover,
                 feedRate: convertToMetric(displayValues.feedRate),
+                plungeFeedRate: convertToMetric(currentPlungeFeedRate),
                 spindleRpm: displayValues.spindleRpm,
                 spindleDelay: displayValues.spindleDelay,
                 patternType,
@@ -727,6 +777,7 @@ export async function onLoad(ctx) {
               bitDiameter: displayValues.bitDiameter,
               stepover: displayValues.stepover,
               feedRate: displayValues.feedRate,
+              plungeFeedRate: currentPlungeFeedRate,
               spindleRpm: displayValues.spindleRpm,
               spindleDelay: displayValues.spindleDelay,
               patternType,
@@ -805,10 +856,11 @@ export async function onLoad(ctx) {
       leadInOutDistance: convertToDisplay(savedJointerSettings.leadInOutDistance ?? 5),
       bitDiameter: convertToDisplay(savedJointerSettings.bitDiameter ?? 6.35),
       feedRate: convertToDisplay(savedJointerSettings.feedRate ?? 1000),
+      plungeFeedRate: convertToDisplay(savedJointerSettings.plungeFeedRate ?? 200),
       spindleRpm: savedJointerSettings.spindleRpm ?? 10000,
       mistM7: savedJointerSettings.mistM7 ?? false,
       floodM8: savedJointerSettings.floodM8 ?? false,
-      spindleDelay: savedJointerSettings.spindleDelay ?? false
+      spindleDelay: savedJointerSettings.spindleDelay ?? 5
     };
 
     ctx.showDialog('Jointer/Cutter Operation', `
@@ -816,7 +868,7 @@ export async function onLoad(ctx) {
         .jointer-layout {
           display: flex;
           flex-direction: column;
-          max-width: 800px;
+          max-width: 1000px;
           width: 100%;
         }
         .form-column {
@@ -875,6 +927,7 @@ export async function onLoad(ctx) {
           display: flex;
           align-items: center;
           gap: 0;
+          justify-content: space-between;
         }
         .coolant-label {
           font-size: 0.85rem;
@@ -886,6 +939,11 @@ export async function onLoad(ctx) {
           flex: 1;
           display: flex;
           gap: 24px;
+          justify-content: flex-end;
+        }
+        .coolant-control {
+          flex: 1;
+          display: flex;
           justify-content: flex-end;
         }
         .form-group {
@@ -1091,33 +1149,27 @@ export async function onLoad(ctx) {
                     <label for="spindleRpm">Spindle RPM</label>
                     <input type="number" id="spindleRpm" step="1" value="${settings.spindleRpm}">
                   </div>
+                  <div class="form-group">
+                    <label for="spindleDelay">Spindle Delay (seconds)</label>
+                    <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}">
+                  </div>
                 </div>
-                <div class="form-row delay-row">
-                  <div class="delay-label">Delay</div>
-                  <div class="delay-control">
+                <div class="form-row coolant-row">
+                  <div class="coolant-label">Mist Coolant</div>
+                  <div class="coolant-control">
                     <label class="toggle-switch">
-                      <input type="checkbox" id="spindleDelay" ${settings.spindleDelay ? 'checked' : ''}>
+                      <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
                       <span class="toggle-slider"></span>
                     </label>
                   </div>
                 </div>
                 <div class="form-row coolant-row">
-                  <div class="coolant-label">Coolant</div>
-                  <div class="coolant-controls">
-                    <div class="toggle-group">
-                      <label for="mistM7">Mist</label>
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
-                        <span class="toggle-slider"></span>
-                      </label>
-                    </div>
-                    <div class="toggle-group">
-                      <label for="floodM8">Flood</label>
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
-                        <span class="toggle-slider"></span>
-                      </label>
-                    </div>
+                  <div class="coolant-label">Flood Coolant</div>
+                  <div class="coolant-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
+                      <span class="toggle-slider"></span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -1144,22 +1196,24 @@ export async function onLoad(ctx) {
             edgeLength: { min: 1, max: 49, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 4, label: 'Depth of Cut' },
             materialThickness: { min: 0.1, max: 4, label: 'Material Thickness' },
-            trimWidth: { min: 0.004, max: 0.2, label: 'Trim Width' },
+            trimWidth: { min: 0, max: 0.2, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 0.1, max: 2, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 0.25, max: 2, label: 'Bit Diameter' },
             feedRate: { min: 10, max: 400, label: 'Feed Rate' },
-            spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' }
+            spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
+            spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           } : {
             edgeLength: { min: 10, max: 5000, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 100, label: 'Depth of Cut' },
             materialThickness: { min: 1, max: 100, label: 'Material Thickness' },
-            trimWidth: { min: 0.1, max: 5, label: 'Trim Width' },
+            trimWidth: { min: 0, max: 5, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 1, max: 50, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
             feedRate: { min: 100, max: 10000, label: 'Feed Rate' },
-            spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' }
+            spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
+            spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           };
 
           // Create tooltip element
@@ -1274,7 +1328,7 @@ export async function onLoad(ctx) {
           }
 
           function addJointerStartupSequence(gcode, options) {
-            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth } = options;
+            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate } = options;
 
             if (mistM7) {
               gcode.push('M7 ; Mist coolant on');
@@ -1285,11 +1339,16 @@ export async function onLoad(ctx) {
             if (spindleRpm > 0) {
               gcode.push(\`M3 S\${spindleRpm} ; Start spindle\`);
             }
-            if (spindleRpm > 0 && spindleDelay) {
-              gcode.push('G4 P5 ; Spindle spin-up delay');
+            if (spindleRpm > 0 && spindleDelay > 0) {
+              gcode.push(\`G4 P\${spindleDelay} ; Wait \${spindleDelay} seconds\`);
             }
             gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-            gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+
+            if (leadInOutDistance === 0) {
+              gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+            } else {
+              gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+            }
           }
 
           function generateJointerGcode(params) {
@@ -1298,7 +1357,8 @@ export async function onLoad(ctx) {
               depthOfCut, materialThickness,
               trimWidth, numberOfPasses,
               leadInOutDistance, bitDiameter,
-              feedRate, spindleRpm,
+              feedRate, plungeFeedRate,
+              spindleRpm,
               mistM7, floodM8,
               spindleDelay,
               isImperial
@@ -1339,25 +1399,8 @@ export async function onLoad(ctx) {
                 gcode.push(\`(Depth pass \${depthPass + 1}/\${numDepthPasses} - Z\${(-currentDepth).toFixed(3)})\`);
 
                 if (edge === 'left') {
-                  // Left edge: Cut along Y-axis (positive direction), offset in positive X
+                  // Left edge: Cut along Y-axis (negative direction for conventional), offset in positive X
                   const startX = offset;
-                  const startY = -leadInOutDistance;
-                  const endY = edgeLength + leadInOutDistance;
-
-                  gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
-
-                  // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
-                  if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth });
-                  } else {
-                    gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
-                  }
-                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (conventional)\`);
-                  gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
-                } else if (edge === 'right') {
-                  // Right edge: Cut along Y-axis (negative direction), offset in negative X
-                  const startX = -offset;
                   const startY = edgeLength + leadInOutDistance;
                   const endY = -leadInOutDistance;
 
@@ -1365,10 +1408,35 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
                   } else {
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+                    if (leadInOutDistance === 0) {
+                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+                    } else {
+                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    }
+                  }
+                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (conventional)\`);
+                  gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
+                } else if (edge === 'right') {
+                  // Right edge: Cut along Y-axis (positive direction for conventional), offset in negative X
+                  const startX = -offset;
+                  const startY = -leadInOutDistance;
+                  const endY = edgeLength + leadInOutDistance;
+
+                  gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
+
+                  // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
+                  if (pass === 0 && depthPass === 0) {
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
+                  } else {
+                    gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
+                    if (leadInOutDistance === 0) {
+                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+                    } else {
+                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    }
                   }
                   gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along right edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1382,10 +1450,14 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
                   } else {
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+                    if (leadInOutDistance === 0) {
+                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+                    } else {
+                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    }
                   }
                   gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along front edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1399,10 +1471,10 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate });
                   } else {
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${isImperial ? '27.56' : '700'} ; Plunge to depth\`);
+                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
                   gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along back edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1446,8 +1518,14 @@ export async function onLoad(ctx) {
               spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
               mistM7: document.getElementById('mistM7').checked,
               floodM8: document.getElementById('floodM8').checked,
-              spindleDelay: document.getElementById('spindleDelay').checked
+              spindleDelay: parseInt(document.getElementById('spindleDelay').value)
             };
+
+            // Get current saved plungeFeedRate from settings
+            const response = await fetch('/api/plugins/com.ncsender.toolbench/settings');
+            const savedSettings = response.ok ? await response.json() : {};
+            const convertToDisplay = (value) => isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value;
+            const currentPlungeFeedRate = convertToDisplay(savedSettings.jointer?.plungeFeedRate ?? 200);
 
             const convertToMetric = (value) => isImperial ? value * INCH_TO_MM : value;
             const settingsToSave = {
@@ -1461,6 +1539,7 @@ export async function onLoad(ctx) {
                 leadInOutDistance: convertToMetric(displayValues.leadInOutDistance),
                 bitDiameter: convertToMetric(displayValues.bitDiameter),
                 feedRate: convertToMetric(displayValues.feedRate),
+                plungeFeedRate: convertToMetric(currentPlungeFeedRate),
                 spindleRpm: displayValues.spindleRpm,
                 mistM7: displayValues.mistM7,
                 floodM8: displayValues.floodM8,
@@ -1470,6 +1549,7 @@ export async function onLoad(ctx) {
 
             const params = {
               ...displayValues,
+              plungeFeedRate: currentPlungeFeedRate,
               isImperial
             };
 
@@ -1549,6 +1629,7 @@ export async function onLoad(ctx) {
       toolDiameter: convertToDisplay(savedBoringSettings.toolDiameter ?? 3.17),
       pitch: convertToDisplay(savedBoringSettings.pitch ?? 2),
       feedRate: convertToDisplay(savedBoringSettings.feedRate ?? 300),
+      plungeFeedRate: convertToDisplay(savedBoringSettings.plungeFeedRate ?? 200),
       spindleRPM: savedBoringSettings.spindleRPM ?? 18000,
       spindleDelay: savedBoringSettings.spindleDelay ?? 6,
       mistM7: savedBoringSettings.mistM7 ?? false,
@@ -1733,6 +1814,7 @@ export async function onLoad(ctx) {
           display: flex;
           align-items: center;
           gap: 0;
+          justify-content: space-between;
         }
 
         .coolant-label {
@@ -1854,50 +1936,42 @@ export async function onLoad(ctx) {
               <div class="form-card-title">Machine Settings</div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="toolDiameter">Tool Diameter (${distanceUnit})</label>
-                  <input type="number" id="toolDiameter" min="0.1" step="0.01" value="${settings.toolDiameter}" required>
+                  <label for="bitDiameter">Bit Diameter (${distanceUnit})</label>
+                  <input type="number" id="bitDiameter" min="0.1" step="0.01" value="${settings.toolDiameter}" required>
                 </div>
-                <div class="form-group">
-                </div>
-              </div>
-
-              <div class="form-row">
                 <div class="form-group">
                   <label for="feedRate">Feed Rate (${distanceUnit}/min)</label>
                   <input type="number" id="feedRate" min="1" step="1" value="${settings.feedRate}" required>
                 </div>
-                <div class="form-group">
-                  <label for="spindleRPM">Spindle RPM</label>
-                  <input type="number" id="spindleRPM" min="1" max="24000" step="100" value="${settings.spindleRPM}" required>
-                </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="spindleDelay">Spindle Delay (seconds)</label>
-                  <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}" required>
+                  <label for="spindleRPM">Spindle RPM</label>
+                  <input type="number" id="spindleRPM" min="1" max="24000" step="100" value="${settings.spindleRPM}" required>
                 </div>
                 <div class="form-group">
+                  <label for="spindleDelay">Spindle Delay (seconds)</label>
+                  <input type="number" id="spindleDelay" min="0" max="30" step="1" value="${settings.spindleDelay}" required>
                 </div>
               </div>
 
               <div class="form-row coolant-row">
-                <div class="coolant-label">Coolant</div>
-                <div class="coolant-controls">
-                  <div class="toggle-group">
-                    <label for="mistM7">Mist</label>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                  <div class="toggle-group">
-                    <label for="floodM8">Flood</label>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
+                <div class="coolant-label">Mist Coolant</div>
+                <div class="coolant-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="mistM7" ${settings.mistM7 ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-row coolant-row">
+                <div class="coolant-label">Flood Coolant</div>
+                <div class="coolant-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="floodM8" ${settings.floodM8 ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1925,7 +1999,7 @@ export async function onLoad(ctx) {
             yDistance: { min: 0.004, max: Infinity, label: 'Y-Distance' },
             diameter: { min: 0.004, max: Infinity, label: 'Diameter' },
             depth: { min: 0.004, max: Infinity, label: 'Depth' },
-            toolDiameter: { min: 0.004, max: Infinity, label: 'Tool Diameter' },
+            bitDiameter: { min: 0.004, max: Infinity, label: 'Bit Diameter' },
             pitch: { min: 0.1, max: 10, label: 'Pitch' },
             feedRate: { min: 1, max: Infinity, label: 'Feed Rate' },
             spindleRPM: { min: 1, max: 24000, label: 'Spindle RPM', integer: true },
@@ -1937,7 +2011,7 @@ export async function onLoad(ctx) {
             yDistance: { min: 0.1, max: Infinity, label: 'Y-Distance' },
             diameter: { min: 0.1, max: Infinity, label: 'Diameter' },
             depth: { min: 0.1, max: Infinity, label: 'Depth' },
-            toolDiameter: { min: 0.1, max: Infinity, label: 'Tool Diameter' },
+            bitDiameter: { min: 0.1, max: Infinity, label: 'Bit Diameter' },
             pitch: { min: 0.1, max: 10, label: 'Pitch' },
             feedRate: { min: 1, max: Infinity, label: 'Feed Rate' },
             spindleRPM: { min: 1, max: 24000, label: 'Spindle RPM', integer: true },
@@ -2033,11 +2107,11 @@ export async function onLoad(ctx) {
 
             // Special validation: diameter must be >= toolDiameter
             if (id === 'diameter') {
-              const toolDiameterInput = document.getElementById('toolDiameter');
-              if (toolDiameterInput) {
-                const toolDiameter = parseFloat(toolDiameterInput.value);
-                if (!isNaN(toolDiameter) && num < toolDiameter) {
-                  return \`\${rules.label} must be at least the Tool Diameter (\${toolDiameter})\`;
+              const bitDiameterInput = document.getElementById('bitDiameter');
+              if (bitDiameterInput) {
+                const bitDiameter = parseFloat(bitDiameterInput.value);
+                if (!isNaN(bitDiameter) && num < bitDiameter) {
+                  return \`\${rules.label} must be at least the Bit Diameter (\${bitDiameter})\`;
                 }
               }
             }
@@ -2095,10 +2169,10 @@ export async function onLoad(ctx) {
             });
           }
 
-          // When toolDiameter changes, clear diameter validation error
-          const toolDiameterInput = document.getElementById('toolDiameter');
-          if (toolDiameterInput) {
-            toolDiameterInput.addEventListener('input', function() {
+          // When bitDiameter changes, clear diameter validation error
+          const bitDiameterInput = document.getElementById('bitDiameter');
+          if (bitDiameterInput) {
+            bitDiameterInput.addEventListener('input', function() {
               if (diameterInput) {
                 diameterInput.style.borderColor = '';
               }
@@ -2109,8 +2183,8 @@ export async function onLoad(ctx) {
           function generateBoringGcode(params) {
             const {
               xCount, xDistance, yCount, yDistance, diameter, depth,
-              cutType, toolDiameter, pitch, feedRate, spindleRPM,
-              spindleDelay, mistM7, floodM8, isImperial
+              cutType, bitDiameter, pitch, feedRate, plungeFeedRate,
+              spindleRPM, spindleDelay, mistM7, floodM8, isImperial
             } = params;
 
             const safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
@@ -2119,7 +2193,7 @@ export async function onLoad(ctx) {
 
             // Calculate toolpath radius
             const holeRadius = diameter / 2;
-            const toolRadius = toolDiameter / 2;
+            const toolRadius = bitDiameter / 2;
             let pathRadius;
 
             if (cutType === 'inner') {
@@ -2137,7 +2211,7 @@ export async function onLoad(ctx) {
             gcode.push(\`(Pattern: \${xCount} x \${yCount} holes)\`);
             gcode.push(\`(Hole Diameter: \${diameter}\${unitsLabel}, Depth: \${depth}\${unitsLabel})\`);
             gcode.push(\`(Cut Type: \${cutType})\`);
-            gcode.push(\`(Tool Diameter: \${toolDiameter}\${unitsLabel})\`);
+            gcode.push(\`(Bit Diameter: \${bitDiameter}\${unitsLabel})\`);
             gcode.push(\`(Pitch: \${pitch}\${unitsLabel} per revolution)\`);
             gcode.push(\`(X-Distance: \${xDistance}\${unitsLabel}, Y-Distance: \${yDistance}\${unitsLabel})\`);
             gcode.push('');
@@ -2193,12 +2267,11 @@ export async function onLoad(ctx) {
                 const slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
                 gcode.push(\`G0 Z\${slowPlungeStart.toFixed(3)}\`);
 
-                // Slow plunge at 200 mm/min to starting depth (clamped to requested depth)
+                // Slow plunge to starting depth (clamped to requested depth)
                 const startDepth = Math.min(depth, zIncrement * 0.5);
                 const rampTargetDepth = Math.min(depth, zIncrement);
                 const rampDepthDiff = Math.max(0, rampTargetDepth - startDepth);
-                const plungeFeed = isImperial ? Math.round(200 * 0.0393701) : 200;
-                gcode.push(\`G1 Z\${(-startDepth).toFixed(3)} F\${plungeFeed}\`);
+                gcode.push(\`G1 Z\${(-startDepth).toFixed(3)} F\${plungeFeedRate}\`);
 
                 // Lead-in ramp moves toward edge (like Fusion 360)
                 const leadInSteps = 7;
@@ -2339,7 +2412,7 @@ export async function onLoad(ctx) {
             const diameter = parseFloat(document.getElementById('diameter').value);
             const depth = parseFloat(document.getElementById('depth').value);
             const cutType = cutTypeToggle.checked ? 'outer' : 'inner';
-            const toolDiameter = parseFloat(document.getElementById('toolDiameter').value);
+            const bitDiameter = parseFloat(document.getElementById('bitDiameter').value);
             const pitch = parseFloat(document.getElementById('pitch').value);
             const feedRate = parseFloat(document.getElementById('feedRate').value);
             const spindleRPM = parseInt(document.getElementById('spindleRPM').value);
@@ -2355,7 +2428,7 @@ export async function onLoad(ctx) {
               diameter,
               depth,
               cutType,
-              toolDiameter,
+              bitDiameter,
               pitch,
               feedRate,
               spindleRPM,
@@ -2363,6 +2436,12 @@ export async function onLoad(ctx) {
               mistM7,
               floodM8
             };
+
+            // Get current saved plungeFeedRate from settings
+            const response = await fetch('/api/plugins/com.ncsender.toolbench/settings');
+            const savedSettings = response.ok ? await response.json() : {};
+            const convertToDisplay = (value) => isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value;
+            const currentPlungeFeedRate = convertToDisplay(savedSettings.boring?.plungeFeedRate ?? 200);
 
             // Convert to metric for storage
             const convertToMetric = (value) => isImperial ? value * 25.4 : value;
@@ -2376,9 +2455,10 @@ export async function onLoad(ctx) {
                 diameter: convertToMetric(displayValues.diameter),
                 depth: convertToMetric(displayValues.depth),
                 cutType: displayValues.cutType,
-                toolDiameter: convertToMetric(displayValues.toolDiameter),
+                toolDiameter: convertToMetric(displayValues.bitDiameter),
                 pitch: convertToMetric(displayValues.pitch),
                 feedRate: convertToMetric(displayValues.feedRate),
+                plungeFeedRate: convertToMetric(currentPlungeFeedRate),
                 spindleRPM: displayValues.spindleRPM,
                 spindleDelay: displayValues.spindleDelay,
                 mistM7: displayValues.mistM7,
@@ -2395,9 +2475,10 @@ export async function onLoad(ctx) {
               diameter: displayValues.diameter,
               depth: displayValues.depth,
               cutType: displayValues.cutType,
-              toolDiameter: displayValues.toolDiameter,
+              bitDiameter: displayValues.bitDiameter,
               pitch: displayValues.pitch,
               feedRate: displayValues.feedRate,
+              plungeFeedRate: currentPlungeFeedRate,
               spindleRPM: displayValues.spindleRPM,
               spindleDelay: displayValues.spindleDelay,
               mistM7: displayValues.mistM7,
