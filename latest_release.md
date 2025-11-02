@@ -1,4 +1,7 @@
 ## What's Changed
 
 ### 🔧 Improvements
-- Improved Jointer/Cutter dialog layout with wider design and repositioned bit diameter field for better usability
+- Enhanced user interface with improved label and input field alignment
+- Refined background color scheme for better visual consistency
+- Optimized plunging functionality for smoother operation
+- Updated layout to maintain visual consistency across the interface
