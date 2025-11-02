@@ -53,11 +53,14 @@ export async function onLoad(ctx) {
           flex-direction: column;
           max-width: 1000px;
           width: 100%;
+          overflow-x: hidden;
         }
         .form-column {
           flex: 1;
           overflow-y: auto;
+          overflow-x: hidden;
           padding: 20px;
+          box-sizing: border-box;
         }
         .plugin-dialog-footer {
           grid-column: 1 / -1;
@@ -75,6 +78,8 @@ export async function onLoad(ctx) {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 20px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .form-card {
@@ -84,6 +89,8 @@ export async function onLoad(ctx) {
           padding: 20px;
           margin-bottom: 20px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+          box-sizing: border-box;
+          min-width: 0;
         }
 
         .form-card-title {
@@ -913,6 +920,8 @@ export async function onLoad(ctx) {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 20px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .form-card {
@@ -922,6 +931,8 @@ export async function onLoad(ctx) {
           padding: 20px;
           margin-bottom: 20px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+          box-sizing: border-box;
+          min-width: 0;
         }
 
         .form-card-title {
@@ -1690,12 +1701,15 @@ export async function onLoad(ctx) {
           height: 100%;
           max-width: 1000px;
           margin: 0 auto;
+          overflow-x: hidden;
         }
 
         .boring-content {
           flex: 1;
           overflow-y: auto;
+          overflow-x: hidden;
           padding: 24px;
+          box-sizing: border-box;
         }
 
         .form-cards-container {
