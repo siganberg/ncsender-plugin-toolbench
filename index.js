@@ -535,7 +535,7 @@ export async function onLoad(ctx) {
           }
 
           function addStartupSequence(gcode, options) {
-            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate } = options;
+            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate } = options;
 
             if (mistM7) {
               gcode.push('M7 ; Mist coolant on');
@@ -550,7 +550,15 @@ export async function onLoad(ctx) {
               gcode.push(\`G4 P\${spindleDelay} ; Wait \${spindleDelay} seconds\`);
             }
             gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-            gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+
+            const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+            const targetDepth = -currentDepth;
+            const rapidDepth = -(previousDepth || 0) - rapidClearance;
+
+            if (rapidDepth > targetDepth) {
+              gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
+            }
+            gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
           }
 
           function generateSurfacingGcode(params) {
@@ -602,7 +610,9 @@ export async function onLoad(ctx) {
             gcode.push('');
 
             let currentDepth = 0;
+            let previousDepth = 0;
             for (let depthPass = 0; depthPass < numDepthPasses; depthPass++) {
+              previousDepth = currentDepth;
               currentDepth = Math.min(currentDepth + depthOfCut, targetDepth);
               gcode.push(\`(Depth pass \${depthPass + 1}/\${numDepthPasses} - Z\${(-currentDepth).toFixed(3)})\`);
 
@@ -611,10 +621,17 @@ export async function onLoad(ctx) {
 
               // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
               if (depthPass === 0) {
-                addStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate });
+                addStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate });
               } else {
+                const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+                const targetDepth = -currentDepth;
+                const rapidDepth = -previousDepth - rapidClearance;
+
                 gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+                if (rapidDepth > targetDepth) {
+                  gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
+                }
+                gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
               }
 
               if (isSpiral) {
@@ -1328,7 +1345,7 @@ export async function onLoad(ctx) {
           }
 
           function addJointerStartupSequence(gcode, options) {
-            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate } = options;
+            const { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate } = options;
 
             if (mistM7) {
               gcode.push('M7 ; Mist coolant on');
@@ -1344,11 +1361,14 @@ export async function onLoad(ctx) {
             }
             gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
 
-            if (leadInOutDistance === 0) {
-              gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
-            } else {
-              gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+            const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+            const targetDepth = -currentDepth;
+            const rapidDepth = -(previousDepth || 0) - rapidClearance;
+
+            if (rapidDepth > targetDepth) {
+              gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
             }
+            gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
           }
 
           function generateJointerGcode(params) {
@@ -1394,7 +1414,9 @@ export async function onLoad(ctx) {
 
               // Loop through depth passes
               let currentDepth = 0;
+              let previousDepth = 0;
               for (let depthPass = 0; depthPass < numDepthPasses; depthPass++) {
+                previousDepth = currentDepth;
                 currentDepth = Math.min(currentDepth + depthOfCut, materialThickness);
                 gcode.push(\`(Depth pass \${depthPass + 1}/\${numDepthPasses} - Z\${(-currentDepth).toFixed(3)})\`);
 
@@ -1408,14 +1430,17 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate });
                   } else {
+                    const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+                    const targetDepth = -currentDepth;
+                    const rapidDepth = -previousDepth - rapidClearance;
+
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    if (leadInOutDistance === 0) {
-                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
-                    } else {
-                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    if (rapidDepth > targetDepth) {
+                      gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
                     }
+                    gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
                   gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1429,14 +1454,17 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate });
                   } else {
+                    const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+                    const targetDepth = -currentDepth;
+                    const rapidDepth = -previousDepth - rapidClearance;
+
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    if (leadInOutDistance === 0) {
-                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
-                    } else {
-                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    if (rapidDepth > targetDepth) {
+                      gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
                     }
+                    gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
                   gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along right edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1450,14 +1478,17 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, leadInOutDistance, plungeFeedRate });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate });
                   } else {
+                    const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+                    const targetDepth = -currentDepth;
+                    const rapidDepth = -previousDepth - rapidClearance;
+
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    if (leadInOutDistance === 0) {
-                      gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
-                    } else {
-                      gcode.push(\`G0 Z\${(-currentDepth).toFixed(3)} ; Rapid to depth (outside material)\`);
+                    if (rapidDepth > targetDepth) {
+                      gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
                     }
+                    gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
                   gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along front edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
@@ -1471,10 +1502,17 @@ export async function onLoad(ctx) {
 
                   // Start coolant, spindle and plunge (only add coolant/spindle on first pass)
                   if (pass === 0 && depthPass === 0) {
-                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, plungeFeedRate });
+                    addJointerStartupSequence(gcode, { mistM7, floodM8, spindleRpm, spindleDelay, safeHeight, isImperial, currentDepth, previousDepth, plungeFeedRate });
                   } else {
+                    const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+                    const targetDepth = -currentDepth;
+                    const rapidDepth = -previousDepth - rapidClearance;
+
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
-                    gcode.push(\`G1 Z\${(-currentDepth).toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
+                    if (rapidDepth > targetDepth) {
+                      gcode.push(\`G0 Z\${rapidDepth.toFixed(3)} ; Rapid to 2mm above previous surface\`);
+                    }
+                    gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
                   gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along back edge (conventional)\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
