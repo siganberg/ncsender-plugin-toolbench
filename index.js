@@ -519,6 +519,7 @@ export async function onLoad(ctx) {
             for (const id in validationRules) {
               const element = document.getElementById(id);
               if (!element) continue;
+              if (element.disabled) continue;
 
               const error = validateInput(id, element.value);
               if (error) {
@@ -1340,6 +1341,7 @@ export async function onLoad(ctx) {
             for (const id in validationRules) {
               const element = document.getElementById(id);
               if (!element) continue;
+              if (element.disabled) continue;
 
               const error = validateInput(id, element.value);
               if (error) {
@@ -2195,6 +2197,7 @@ export async function onLoad(ctx) {
             for (const id in validationRules) {
               const element = document.getElementById(id);
               if (!element) continue;
+              if (element.disabled) continue;
 
               const error = validateInput(id, element.value);
               if (error) {
