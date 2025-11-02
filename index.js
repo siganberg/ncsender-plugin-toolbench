@@ -1,14 +1,14 @@
 /**
- * Surfacing Plugin
- * Generates G-code for surfacing operations (fly-cutting)
+ * Planer Plugin
+ * Generates G-code for planer operations (fly-cutting)
  */
 
 export async function onLoad(ctx) {
   ctx.log('ToolBench plugin loaded');
 
-  // Register the Surfacing tool in the Tools menu (client-only dialogs)
-  ctx.registerToolMenu('Surfacing', async () => {
-    ctx.log('Surfacing tool clicked');
+  // Register the Planer tool in the Tools menu (client-only dialogs)
+  ctx.registerToolMenu('Planer', async () => {
+    ctx.log('Planer tool clicked');
 
     // Get app settings to determine units
     const appSettings = ctx.getAppSettings();
@@ -22,33 +22,33 @@ export async function onLoad(ctx) {
     // Conversion factor
     const MM_TO_INCH = 0.0393701;
 
-    // Get saved settings for Surfacing (separate from jointer)
-    const savedSurfacingSettings = ctx.getSettings()?.surfacing || {};
-    const defaultPatternType = savedSurfacingSettings.patternType ?? (savedSurfacingSettings.invertOrientation ? 'zigzagX' : 'zigzagY');
+    // Get saved settings for Planer (separate from jointer)
+    const savedPlanerSettings = ctx.getSettings()?.planer || {};
+    const defaultPatternType = savedPlanerSettings.patternType ?? (savedPlanerSettings.invertOrientation ? 'zigzagX' : 'zigzagY');
 
     // Convert from metric to imperial if needed for display
     const convertToDisplay = (value) => isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : value;
 
     const settings = {
-      xDimension: convertToDisplay(savedSurfacingSettings.xDimension ?? 100),
-      yDimension: convertToDisplay(savedSurfacingSettings.yDimension ?? 100),
-      depthOfCut: convertToDisplay(savedSurfacingSettings.depthOfCut ?? 0.5),
-      targetDepth: convertToDisplay(savedSurfacingSettings.targetDepth ?? 0.5),
-      bitDiameter: convertToDisplay(savedSurfacingSettings.bitDiameter ?? 25.4),
-      stepover: savedSurfacingSettings.stepover ?? 80,
-      feedRate: convertToDisplay(savedSurfacingSettings.feedRate ?? 2000),
-      plungeFeedRate: convertToDisplay(savedSurfacingSettings.plungeFeedRate ?? 200),
-      spindleRpm: savedSurfacingSettings.spindleRpm ?? 15000,
-      spindleDelay: savedSurfacingSettings.spindleDelay ?? 5,
+      xDimension: convertToDisplay(savedPlanerSettings.xDimension ?? 100),
+      yDimension: convertToDisplay(savedPlanerSettings.yDimension ?? 100),
+      depthOfCut: convertToDisplay(savedPlanerSettings.depthOfCut ?? 0.5),
+      targetDepth: convertToDisplay(savedPlanerSettings.targetDepth ?? 0.5),
+      bitDiameter: convertToDisplay(savedPlanerSettings.bitDiameter ?? 25.4),
+      stepover: savedPlanerSettings.stepover ?? 80,
+      feedRate: convertToDisplay(savedPlanerSettings.feedRate ?? 2000),
+      plungeFeedRate: convertToDisplay(savedPlanerSettings.plungeFeedRate ?? 200),
+      spindleRpm: savedPlanerSettings.spindleRpm ?? 15000,
+      spindleDelay: savedPlanerSettings.spindleDelay ?? 5,
       patternType: defaultPatternType,
-      mistM7: savedSurfacingSettings.mistM7 ?? false,
-      floodM8: savedSurfacingSettings.floodM8 ?? false
+      mistM7: savedPlanerSettings.mistM7 ?? false,
+      floodM8: savedPlanerSettings.floodM8 ?? false
     };
 
-    ctx.showDialog('Surfacing Operation',
+    ctx.showDialog('Planer Operation',
       /* html */ `
       <style>
-        .surfacing-layout {
+        .planer-layout {
           display: flex;
           flex-direction: column;
           max-width: 1000px;
@@ -174,9 +174,11 @@ export async function onLoad(ctx) {
           font-weight: 500;
           margin-bottom: 4px;
           color: var(--color-text-primary);
+          text-align: center;
         }
         input[type="number"] {
           padding: 8px;
+          text-align: center;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           font-size: 0.9rem;
@@ -260,6 +262,8 @@ export async function onLoad(ctx) {
           background: var(--color-surface);
           color: var(--color-text-primary);
           font-size: 0.9rem;
+          text-align: center;
+          text-align-last: center;
         }
         .orientation-select:focus {
           outline: none;
@@ -302,9 +306,9 @@ export async function onLoad(ctx) {
         }
       </style>
 
-      <div class="surfacing-layout">
+      <div class="planer-layout">
         <div class="form-column">
-          <form id="surfacingForm" novalidate>
+          <form id="planerForm" novalidate>
             <div class="form-cards-container">
               <div class="form-card">
                 <div class="form-card-title">Dimensions</div>
@@ -393,7 +397,7 @@ export async function onLoad(ctx) {
       <div class="plugin-dialog-footer">
         <div class="button-group">
           <button type="button" class="btn btn-secondary" onclick="window.postMessage({type: 'close-plugin-dialog'}, '*')">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="document.getElementById('surfacingForm').requestSubmit()">Generate G-code</button>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('planerForm').requestSubmit()">Generate G-code</button>
         </div>
       </div>
 
@@ -561,7 +565,7 @@ export async function onLoad(ctx) {
             gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
           }
 
-          function generateSurfacingGcode(params) {
+          function generatePlanerGcode(params) {
             const {
               startX, startY,
               xDimension, yDimension,
@@ -595,7 +599,7 @@ export async function onLoad(ctx) {
             const numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
 
             let gcode = [];
-            gcode.push('(Surfacing Operation)');
+            gcode.push('(Planer Operation)');
             gcode.push(\`(Start: X\${startX} Y\${startY})\`);
             gcode.push(\`(Dimensions: \${xDimension} x \${yDimension} \${unitsLabel})\`);
             gcode.push(\`(Bit Diameter: \${bitDiameter}\${unitsLabel}, Stepover: \${stepover}%)\`);
@@ -729,7 +733,7 @@ export async function onLoad(ctx) {
             return gcode.join('\\n');
           }
 
-          document.getElementById('surfacingForm').addEventListener('submit', async (e) => {
+          document.getElementById('planerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             // Validate all inputs before proceeding
@@ -760,12 +764,12 @@ export async function onLoad(ctx) {
             const response = await fetch('/api/plugins/com.ncsender.toolbench/settings');
             const savedSettings = response.ok ? await response.json() : {};
             const convertToDisplay = (value) => isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value;
-            const currentPlungeFeedRate = convertToDisplay(savedSettings.surfacing?.plungeFeedRate ?? 200);
+            const currentPlungeFeedRate = convertToDisplay(savedSettings.planer?.plungeFeedRate ?? 200);
 
             // Convert to metric for storage
             const convertToMetric = (value) => isImperial ? value * INCH_TO_MM : value;
             const settingsToSave = {
-              surfacing: {
+              planer: {
                 xDimension: convertToMetric(displayValues.xDimension),
                 yDimension: convertToMetric(displayValues.yDimension),
                 depthOfCut: convertToMetric(displayValues.depthOfCut),
@@ -804,7 +808,7 @@ export async function onLoad(ctx) {
               isImperial
             };
 
-            const gcode = generateSurfacingGcode(params);
+            const gcode = generatePlanerGcode(params);
 
             // Save settings to server (in metric)
             fetch('/api/plugins/com.ncsender.toolbench/settings', {
@@ -816,7 +820,7 @@ export async function onLoad(ctx) {
             // Upload file
             const formData = new FormData();
             const blob = new Blob([gcode], { type: 'text/plain' });
-            formData.append('file', blob, 'Surfacing.nc');
+            formData.append('file', blob, 'Planer.nc');
 
             try {
               const response = await fetch('/api/gcode-files', {
@@ -857,7 +861,7 @@ export async function onLoad(ctx) {
     // Conversion factor
     const MM_TO_INCH = 0.0393701;
 
-    // Get saved settings for Jointer (separate from surfacing)
+    // Get saved settings for Jointer (separate from planer)
     const savedJointerSettings = ctx.getSettings()?.jointer || {};
 
     // Convert from metric to imperial if needed for display
@@ -972,9 +976,11 @@ export async function onLoad(ctx) {
           font-weight: 500;
           margin-bottom: 4px;
           color: var(--color-text-primary);
+          text-align: center;
         }
         input[type="number"] {
           padding: 8px;
+          text-align: center;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           font-size: 0.9rem;
@@ -1058,6 +1064,8 @@ export async function onLoad(ctx) {
           background: var(--color-surface);
           color: var(--color-text-primary);
           font-size: 0.9rem;
+          text-align: center;
+          text-align-last: center;
         }
         .orientation-select:focus {
           outline: none;
@@ -1756,6 +1764,7 @@ export async function onLoad(ctx) {
           font-weight: 500;
           color: var(--color-text-primary);
           font-size: 0.9rem;
+          text-align: center;
         }
 
         .form-group input {
@@ -1765,6 +1774,7 @@ export async function onLoad(ctx) {
           background: var(--color-surface);
           color: var(--color-text-primary);
           font-size: 0.9rem;
+          text-align: center;
         }
 
         .form-group input:disabled {
@@ -1782,6 +1792,7 @@ export async function onLoad(ctx) {
         .cut-type-toggle {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 12px;
           margin-top: 6px;
         }
@@ -2561,5 +2572,5 @@ export async function onLoad(ctx) {
 }
 
 export async function onUnload() {
-  console.log('Surfacing plugin unloaded');
+  console.log('Planer plugin unloaded');
 }
