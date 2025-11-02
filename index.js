@@ -78,7 +78,7 @@ export async function onLoad(ctx) {
         }
 
         .form-card {
-          background: var(--color-surface-secondary);
+          background: var(--color-surface-muted);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-medium);
           padding: 20px;
@@ -916,7 +916,7 @@ export async function onLoad(ctx) {
         }
 
         .form-card {
-          background: var(--color-surface-secondary);
+          background: var(--color-surface-muted);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-medium);
           padding: 20px;
@@ -1891,7 +1891,7 @@ export async function onLoad(ctx) {
         }
 
         .form-card {
-          background: var(--color-surface-secondary);
+          background: var(--color-surface-muted);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-medium);
           padding: 20px;
