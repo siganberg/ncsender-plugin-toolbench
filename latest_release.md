@@ -1,6 +1,4 @@
 ## What's Changed
 
 ### 🔧 Improvements
-- Improved form layout width for better readability
-- Enhanced input field styling with proper width constraints
-- Simplified form labels for cleaner interface
+- Improved form validation by excluding disabled input fields from validation checks
