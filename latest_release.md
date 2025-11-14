@@ -1,4 +1,4 @@
 ## What's Changed
 
 ### 🔧 Improvements
-- Improved form validation by excluding disabled input fields from validation checks
+- Updated minimum feed rate to 1 for Planer, Jointer, and Boring tools to ensure proper operation
