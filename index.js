@@ -425,7 +425,7 @@ export async function onLoad(ctx) {
             targetDepth: { min: 0.003, max: 1, label: 'Target Depth' },
             bitDiameter: { min: 0.03, max: 2, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
-            feedRate: { min: 40, max: 800, label: 'Feed Rate' },
+            feedRate: { min: 1, max: 800, label: 'Feed Rate' },
             spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           } : {
@@ -435,7 +435,7 @@ export async function onLoad(ctx) {
             targetDepth: { min: 0.1, max: 20, label: 'Target Depth' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
-            feedRate: { min: 1000, max: 20000, label: 'Feed Rate' },
+            feedRate: { min: 1, max: 20000, label: 'Feed Rate' },
             spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           };
@@ -1243,7 +1243,7 @@ export async function onLoad(ctx) {
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 0.1, max: 2, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 0.25, max: 2, label: 'Bit Diameter' },
-            feedRate: { min: 10, max: 400, label: 'Feed Rate' },
+            feedRate: { min: 1, max: 400, label: 'Feed Rate' },
             spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           } : {
@@ -1254,7 +1254,7 @@ export async function onLoad(ctx) {
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 1, max: 50, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
-            feedRate: { min: 100, max: 10000, label: 'Feed Rate' },
+            feedRate: { min: 1, max: 10000, label: 'Feed Rate' },
             spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
           };
