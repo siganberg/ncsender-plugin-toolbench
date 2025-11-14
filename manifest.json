@@ -1,7 +1,7 @@
 {
   "id": "com.ncsender.toolbench",
   "name": "ToolBench",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "minAppVersion": "0.3.19",
   "author": "ncSender",
   "description": "Collection of CNC tooling utilities including surfacing, jointer/cutter, and boring operations",
