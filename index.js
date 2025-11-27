@@ -36,6 +36,7 @@ export async function onLoad(ctx) {
       targetDepth: convertToDisplay(savedPlanerSettings.targetDepth ?? 0.5),
       bitDiameter: convertToDisplay(savedPlanerSettings.bitDiameter ?? 25.4),
       stepover: savedPlanerSettings.stepover ?? 80,
+      overrun: convertToDisplay(savedPlanerSettings.overrun ?? 5),
       feedRate: convertToDisplay(savedPlanerSettings.feedRate ?? 2000),
       plungeFeedRate: convertToDisplay(savedPlanerSettings.plungeFeedRate ?? 200),
       spindleRpm: savedPlanerSettings.spindleRpm ?? 15000,
@@ -389,6 +390,10 @@ export async function onLoad(ctx) {
                     <label for="stepover">Stepover (%)</label>
                     <input type="number" id="stepover" step="1" value="${settings.stepover}">
                   </div>
+                  <div class="form-group">
+                    <label for="overrun">Overrun (${distanceUnit})</label>
+                    <input type="number" id="overrun" step="0.1" value="${settings.overrun}">
+                  </div>
                 </div>
               </div>
 
@@ -459,6 +464,7 @@ export async function onLoad(ctx) {
             targetDepth: { min: 0.003, max: 1, label: 'Target Depth' },
             bitDiameter: { min: 0.03, max: 2, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
+            overrun: { min: 0, max: 10, label: 'Overrun' },
             feedRate: { min: 1, max: 800, label: 'Feed Rate' },
             spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
@@ -469,6 +475,7 @@ export async function onLoad(ctx) {
             targetDepth: { min: 0.1, max: 20, label: 'Target Depth' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
             stepover: { min: 10, max: 100, label: 'Stepover' },
+            overrun: { min: 0, max: 250, label: 'Overrun' },
             feedRate: { min: 1, max: 20000, label: 'Feed Rate' },
             spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
             spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
@@ -616,6 +623,7 @@ export async function onLoad(ctx) {
               xDimension, yDimension,
               depthOfCut, targetDepth,
               bitDiameter, stepover,
+              overrun,
               feedRate, plungeFeedRate,
               spindleRpm,
               patternType, spindleDelay,
@@ -634,11 +642,11 @@ export async function onLoad(ctx) {
             const invertOrientation = selectedPattern === 'zigzagX';
             const isSpiral = selectedPattern === 'spiral';
 
-            // Use the cutter center for perimeter moves; no overcut applied
-            const adjustedStartX = startX;
-            const adjustedStartY = startY;
-            const adjustedXDimension = xDimension;
-            const adjustedYDimension = yDimension;
+            // Apply overrun: start from negative overrun, extend dimensions by overrun on each side
+            const adjustedStartX = startX - overrun;
+            const adjustedStartY = startY - overrun;
+            const adjustedXDimension = xDimension + (overrun * 2);
+            const adjustedYDimension = yDimension + (overrun * 2);
 
             const stepDimension = invertOrientation ? adjustedYDimension : adjustedXDimension;
             const numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
@@ -647,6 +655,8 @@ export async function onLoad(ctx) {
             gcode.push('(Planer Operation)');
             gcode.push(\`(Start: X\${startX} Y\${startY})\`);
             gcode.push(\`(Dimensions: \${xDimension} x \${yDimension} \${unitsLabel})\`);
+            gcode.push(\`(Overrun: \${overrun}\${unitsLabel})\`);
+            gcode.push(\`(Actual Cut Area: \${adjustedXDimension} x \${adjustedYDimension} \${unitsLabel})\`);
             gcode.push(\`(Bit Diameter: \${bitDiameter}\${unitsLabel}, Stepover: \${stepover}%)\`);
             gcode.push(\`(Target Depth: \${targetDepth}\${unitsLabel} in \${numDepthPasses} passes)\`);
             gcode.push(\`(Feed Rate: \${feedRate}\${unitsLabel}/min, Spindle: \${spindleRpm}RPM)\`);
@@ -798,6 +808,7 @@ export async function onLoad(ctx) {
               targetDepth: parseFloat(document.getElementById('targetDepth').value),
               bitDiameter: parseFloat(document.getElementById('bitDiameter').value),
               stepover: parseFloat(document.getElementById('stepover').value),
+              overrun: parseFloat(document.getElementById('overrun').value),
               feedRate: parseFloat(document.getElementById('feedRate').value),
               spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
               mistM7: document.getElementById('mistM7').checked,
@@ -821,6 +832,7 @@ export async function onLoad(ctx) {
                 targetDepth: convertToMetric(displayValues.targetDepth),
                 bitDiameter: convertToMetric(displayValues.bitDiameter),
                 stepover: displayValues.stepover,
+                overrun: convertToMetric(displayValues.overrun),
                 feedRate: convertToMetric(displayValues.feedRate),
                 plungeFeedRate: convertToMetric(currentPlungeFeedRate),
                 spindleRpm: displayValues.spindleRpm,
@@ -842,6 +854,7 @@ export async function onLoad(ctx) {
               targetDepth: displayValues.targetDepth,
               bitDiameter: displayValues.bitDiameter,
               stepover: displayValues.stepover,
+              overrun: displayValues.overrun,
               feedRate: displayValues.feedRate,
               plungeFeedRate: currentPlungeFeedRate,
               spindleRpm: displayValues.spindleRpm,
