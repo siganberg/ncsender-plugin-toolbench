@@ -199,6 +199,31 @@ export async function onLoad(ctx) {
           outline: none;
           border-color: var(--color-accent);
         }
+        select {
+          padding: 8px 8px 8px 8px;
+          padding-right: 24px;
+          text-align: center;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-small);
+          font-size: 0.9rem;
+          background: var(--color-surface);
+          color: var(--color-text-primary);
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 16px;
+        }
+        select:focus {
+          outline: none;
+          border-color: var(--color-accent);
+        }
         .toggle-group {
           display: flex;
           align-items: center;
@@ -267,6 +292,7 @@ export async function onLoad(ctx) {
         .orientation-select {
           width: 100%;
           padding: 8px;
+          padding-right: 24px;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           background: var(--color-surface);
@@ -274,6 +300,14 @@ export async function onLoad(ctx) {
           font-size: 0.9rem;
           text-align: center;
           text-align-last: center;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 16px;
         }
         .orientation-select:focus {
           outline: none;
@@ -886,6 +920,7 @@ export async function onLoad(ctx) {
       trimWidth: convertToDisplay(savedJointerSettings.trimWidth ?? 0.5),
       numberOfPasses: savedJointerSettings.numberOfPasses ?? 1,
       leadInOutDistance: convertToDisplay(savedJointerSettings.leadInOutDistance ?? 5),
+      cutDirection: savedJointerSettings.cutDirection ?? 'Conventional',
       bitDiameter: convertToDisplay(savedJointerSettings.bitDiameter ?? 6.35),
       feedRate: convertToDisplay(savedJointerSettings.feedRate ?? 1000),
       plungeFeedRate: convertToDisplay(savedJointerSettings.plungeFeedRate ?? 200),
@@ -1009,6 +1044,31 @@ export async function onLoad(ctx) {
           outline: none;
           border-color: var(--color-accent);
         }
+        select {
+          padding: 8px 8px 8px 8px;
+          padding-right: 24px;
+          text-align: center;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-small);
+          font-size: 0.9rem;
+          background: var(--color-surface);
+          color: var(--color-text-primary);
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 16px;
+        }
+        select:focus {
+          outline: none;
+          border-color: var(--color-accent);
+        }
         .toggle-group {
           display: flex;
           align-items: center;
@@ -1077,6 +1137,7 @@ export async function onLoad(ctx) {
         .orientation-select {
           width: 100%;
           padding: 8px;
+          padding-right: 24px;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-small);
           background: var(--color-surface);
@@ -1084,6 +1145,14 @@ export async function onLoad(ctx) {
           font-size: 0.9rem;
           text-align: center;
           text-align-last: center;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 16px;
         }
         .orientation-select:focus {
           outline: none;
@@ -1172,6 +1241,13 @@ export async function onLoad(ctx) {
                     <label for="leadInOutDistance">Lead-In/Out (${distanceUnit})</label>
                     <input type="number" id="leadInOutDistance" step="0.1" value="${settings.leadInOutDistance}">
                   </div>
+                  <div class="form-group">
+                    <label for="cutDirection">Cut Direction</label>
+                    <select id="cutDirection">
+                      <option value="Conventional" ${settings.cutDirection === 'Conventional' ? 'selected' : ''}>Conventional</option>
+                      <option value="Climb" ${settings.cutDirection === 'Climb' ? 'selected' : ''}>Climb</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1239,7 +1315,7 @@ export async function onLoad(ctx) {
             edgeLength: { min: 1, max: 49, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 4, label: 'Depth of Cut' },
             materialThickness: { min: 0.1, max: 4, label: 'Material Thickness' },
-            trimWidth: { min: 0, max: 0.2, label: 'Trim Width' },
+            trimWidth: { min: -40, max: 40, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 0.1, max: 2, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 0.25, max: 2, label: 'Bit Diameter' },
@@ -1250,7 +1326,7 @@ export async function onLoad(ctx) {
             edgeLength: { min: 10, max: 5000, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 100, label: 'Depth of Cut' },
             materialThickness: { min: 1, max: 100, label: 'Material Thickness' },
-            trimWidth: { min: 0, max: 5, label: 'Trim Width' },
+            trimWidth: { min: -1000, max: 1000, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 1, max: 50, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
@@ -1403,7 +1479,8 @@ export async function onLoad(ctx) {
               edgeLength, edge,
               depthOfCut, materialThickness,
               trimWidth, numberOfPasses,
-              leadInOutDistance, bitDiameter,
+              leadInOutDistance, cutDirection,
+              bitDiameter,
               feedRate, plungeFeedRate,
               spindleRpm,
               mistM7, floodM8,
@@ -1448,10 +1525,16 @@ export async function onLoad(ctx) {
                 gcode.push(\`(Depth pass \${depthPass + 1}/\${numDepthPasses} - Z\${(-currentDepth).toFixed(3)})\`);
 
                 if (edge === 'left') {
-                  // Left edge: Cut along Y-axis (negative direction for conventional), offset in positive X
+                  // Left edge: Cut along Y-axis, offset in positive X
                   const startX = offset;
-                  const startY = edgeLength + leadInOutDistance;
-                  const endY = -leadInOutDistance;
+                  let startY, endY;
+                  if (cutDirection === 'Conventional') {
+                    startY = edgeLength + leadInOutDistance;
+                    endY = -leadInOutDistance;
+                  } else {
+                    startY = -leadInOutDistance;
+                    endY = edgeLength + leadInOutDistance;
+                  }
 
                   gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
 
@@ -1469,13 +1552,19 @@ export async function onLoad(ctx) {
                     }
                     gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
-                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (conventional)\`);
+                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (\${cutDirection.toLowerCase()})\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
                 } else if (edge === 'right') {
-                  // Right edge: Cut along Y-axis (positive direction for conventional), offset in negative X
+                  // Right edge: Cut along Y-axis, offset in negative X
                   const startX = -offset;
-                  const startY = -leadInOutDistance;
-                  const endY = edgeLength + leadInOutDistance;
+                  let startY, endY;
+                  if (cutDirection === 'Conventional') {
+                    startY = -leadInOutDistance;
+                    endY = edgeLength + leadInOutDistance;
+                  } else {
+                    startY = edgeLength + leadInOutDistance;
+                    endY = -leadInOutDistance;
+                  }
 
                   gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
 
@@ -1493,13 +1582,19 @@ export async function onLoad(ctx) {
                     }
                     gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
-                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along right edge (conventional)\`);
+                  gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along right edge (\${cutDirection.toLowerCase()})\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
                 } else if (edge === 'front') {
-                  // Front edge: Cut along X-axis (negative direction), offset in positive Y
+                  // Front edge: Cut along X-axis, offset in positive Y
                   const startY = offset;
-                  const startX = edgeLength + leadInOutDistance;
-                  const endX = -leadInOutDistance;
+                  let startX, endX;
+                  if (cutDirection === 'Conventional') {
+                    startX = edgeLength + leadInOutDistance;
+                    endX = -leadInOutDistance;
+                  } else {
+                    startX = -leadInOutDistance;
+                    endX = edgeLength + leadInOutDistance;
+                  }
 
                   gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
 
@@ -1517,13 +1612,19 @@ export async function onLoad(ctx) {
                     }
                     gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
-                  gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along front edge (conventional)\`);
+                  gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along front edge (\${cutDirection.toLowerCase()})\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
                 } else {
-                  // Back edge: Cut along X-axis (positive direction), offset in negative Y
+                  // Back edge: Cut along X-axis, offset in negative Y
                   const startY = -offset;
-                  const startX = -leadInOutDistance;
-                  const endX = edgeLength + leadInOutDistance;
+                  let startX, endX;
+                  if (cutDirection === 'Conventional') {
+                    startX = -leadInOutDistance;
+                    endX = edgeLength + leadInOutDistance;
+                  } else {
+                    startX = edgeLength + leadInOutDistance;
+                    endX = -leadInOutDistance;
+                  }
 
                   gcode.push(\`G0 X\${startX.toFixed(3)} Y\${startY.toFixed(3)} ; Move to start (with lead-in)\`);
 
@@ -1541,7 +1642,7 @@ export async function onLoad(ctx) {
                     }
                     gcode.push(\`G1 Z\${targetDepth.toFixed(3)} F\${plungeFeedRate} ; Plunge to depth\`);
                   }
-                  gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along back edge (conventional)\`);
+                  gcode.push(\`G1 X\${endX.toFixed(3)} F\${feedRate} ; Cut along back edge (\${cutDirection.toLowerCase()})\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
                 }
               }
@@ -1578,6 +1679,7 @@ export async function onLoad(ctx) {
               trimWidth: parseFloat(document.getElementById('trimWidth').value),
               numberOfPasses: parseInt(document.getElementById('numberOfPasses').value),
               leadInOutDistance: parseFloat(document.getElementById('leadInOutDistance').value),
+              cutDirection: document.getElementById('cutDirection').value,
               bitDiameter: parseFloat(document.getElementById('bitDiameter').value),
               feedRate: parseFloat(document.getElementById('feedRate').value),
               spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
@@ -1602,6 +1704,7 @@ export async function onLoad(ctx) {
                 trimWidth: convertToMetric(displayValues.trimWidth),
                 numberOfPasses: displayValues.numberOfPasses,
                 leadInOutDistance: convertToMetric(displayValues.leadInOutDistance),
+                cutDirection: displayValues.cutDirection,
                 bitDiameter: convertToMetric(displayValues.bitDiameter),
                 feedRate: convertToMetric(displayValues.feedRate),
                 plungeFeedRate: convertToMetric(currentPlungeFeedRate),
