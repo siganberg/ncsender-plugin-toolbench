@@ -1,4 +1,4 @@
 ## What's Changed
 
 ### 🔧 Improvements
-- Updated minimum feed rate to 1 for Planer, Jointer, and Boring tools to ensure proper operation
+- Added support for negative trim width values, allowing cuts to be made using the opposite edge as a reference point
