@@ -684,7 +684,7 @@ export async function onLoad(ctx) {
               } else {
                 const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
                 const targetDepth = -currentDepth;
-                const rapidDepth = -previousDepth - rapidClearance;
+                const rapidDepth = -previousDepth + rapidClearance;
 
                 gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
                 if (rapidDepth > targetDepth) {
@@ -1328,7 +1328,7 @@ export async function onLoad(ctx) {
             edgeLength: { min: 1, max: 49, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 4, label: 'Depth of Cut' },
             materialThickness: { min: 0.1, max: 4, label: 'Material Thickness' },
-            trimWidth: { min: -40, max: 40, label: 'Trim Width' },
+            trimWidth: { min: 0, max: 40, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 0.1, max: 2, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 0.25, max: 2, label: 'Bit Diameter' },
@@ -1339,7 +1339,7 @@ export async function onLoad(ctx) {
             edgeLength: { min: 10, max: 5000, label: 'Edge Length' },
             depthOfCut: { min: 0.1, max: 100, label: 'Depth of Cut' },
             materialThickness: { min: 1, max: 100, label: 'Material Thickness' },
-            trimWidth: { min: -1000, max: 1000, label: 'Trim Width' },
+            trimWidth: { min: 0, max: 1000, label: 'Trim Width' },
             numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
             leadInOutDistance: { min: 1, max: 50, label: 'Lead-In/Out Distance' },
             bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
@@ -1525,8 +1525,11 @@ export async function onLoad(ctx) {
             gcode.push('');
 
             // Loop through trim width passes
+            // offset represents distance from edge where bit center should be positioned
+            // For trimWidth=0: bit edge should be flush (offset = bitRadius)
+            // For trimWidth=1mm: bit should remove 1mm (offset = bitRadius - trimWidth)
             for (let pass = 0; pass < numberOfPasses; pass++) {
-              const offset = (bitDiameter / 2) + trimWidth + (pass * trimWidth);
+              const offset = (bitDiameter / 2) - trimWidth + (pass * trimWidth);
               gcode.push(\`(Trim pass \${pass + 1}/\${numberOfPasses} - Offset: \${offset.toFixed(3)}\${unitsLabel})\`);
 
               // Loop through depth passes
@@ -1538,8 +1541,8 @@ export async function onLoad(ctx) {
                 gcode.push(\`(Depth pass \${depthPass + 1}/\${numDepthPasses} - Z\${(-currentDepth).toFixed(3)})\`);
 
                 if (edge === 'left') {
-                  // Left edge: Cut along Y-axis, offset in positive X
-                  const startX = offset;
+                  // Left edge: Cut along Y-axis, offset in negative X
+                  const startX = -offset;
                   let startY, endY;
                   if (cutDirection === 'Conventional') {
                     startY = edgeLength + leadInOutDistance;
@@ -1557,7 +1560,7 @@ export async function onLoad(ctx) {
                   } else {
                     const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
                     const targetDepth = -currentDepth;
-                    const rapidDepth = -previousDepth - rapidClearance;
+                    const rapidDepth = -previousDepth + rapidClearance;
 
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
                     if (rapidDepth > targetDepth) {
@@ -1568,8 +1571,8 @@ export async function onLoad(ctx) {
                   gcode.push(\`G1 Y\${endY.toFixed(3)} F\${feedRate} ; Cut along left edge (\${cutDirection.toLowerCase()})\`);
                   gcode.push(\`G0 Z\${safeHeight} ; Retract\`);
                 } else if (edge === 'right') {
-                  // Right edge: Cut along Y-axis, offset in negative X
-                  const startX = -offset;
+                  // Right edge: Cut along Y-axis, offset in positive X
+                  const startX = offset;
                   let startY, endY;
                   if (cutDirection === 'Conventional') {
                     startY = -leadInOutDistance;
@@ -1587,7 +1590,7 @@ export async function onLoad(ctx) {
                   } else {
                     const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
                     const targetDepth = -currentDepth;
-                    const rapidDepth = -previousDepth - rapidClearance;
+                    const rapidDepth = -previousDepth + rapidClearance;
 
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
                     if (rapidDepth > targetDepth) {
@@ -1617,7 +1620,7 @@ export async function onLoad(ctx) {
                   } else {
                     const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
                     const targetDepth = -currentDepth;
-                    const rapidDepth = -previousDepth - rapidClearance;
+                    const rapidDepth = -previousDepth + rapidClearance;
 
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
                     if (rapidDepth > targetDepth) {
@@ -1647,7 +1650,7 @@ export async function onLoad(ctx) {
                   } else {
                     const rapidClearance = isImperial ? (2 * 0.0393701) : 2;
                     const targetDepth = -currentDepth;
-                    const rapidDepth = -previousDepth - rapidClearance;
+                    const rapidDepth = -previousDepth + rapidClearance;
 
                     gcode.push(\`G0 Z\${safeHeight} ; Rapid to safe height\`);
                     if (rapidDepth > targetDepth) {
