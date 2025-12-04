@@ -63,3 +63,4 @@ This plugin is part of the ncSender ecosystem: https://github.com/siganberg/ncSe
 ## License
 
 See main ncSender repository for license information.
+# ncsender-plugin-boxjoints
