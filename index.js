@@ -901,7 +901,7 @@ export async function onLoad(ctx) {
         })();
       </script>
     `);
-  }, { clientOnly: true }); // Only show to the client who clicked
+  }, { clientOnly: true, icon: 'planer.png' }); // Only show to the client who clicked
 
   // Register the Jointer/Cutter tool in the Tools menu (client-only dialogs)
   ctx.registerToolMenu('Jointer/Cutter', async () => {
@@ -1772,7 +1772,7 @@ export async function onLoad(ctx) {
         })();
       </script>
     `);
-  }, { clientOnly: true }); // Only show to the client who clicked
+  }, { clientOnly: true, icon: 'jointer.png' }); // Only show to the client who clicked
 
   // Register the Boring tool in the Tools menu (client-only dialogs)
   ctx.registerToolMenu('Boring', async () => {
@@ -2713,7 +2713,7 @@ export async function onLoad(ctx) {
         })();
       </script>
     `);
-  }, { clientOnly: true }); // Only show to the client who clicked
+  }, { clientOnly: true, icon: 'boring.png' }); // Only show to the client who clicked
 }
 
 export async function onUnload() {
