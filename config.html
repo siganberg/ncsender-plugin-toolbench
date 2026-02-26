@@ -1,0 +1,2452 @@
+<style>
+  .toolbench-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 30px;
+    gap: 16px;
+    color: var(--color-text-secondary);
+  }
+  .toolbench-loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: tb-spin 0.8s linear infinite;
+  }
+  @keyframes tb-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* === PLANER CSS === */
+  .planer-layout {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .planer-layout .form-column {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .planer-layout .plugin-dialog-footer {
+    grid-column: 1 / -1;
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .planer-layout .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .planer-layout .form-cards-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .planer-layout .form-card {
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  .planer-layout .form-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+  }
+  .planer-layout .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .planer-layout .form-row.coolant-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: space-between;
+  }
+  .planer-layout .form-row.spindle-row {
+    align-items: center;
+  }
+  .planer-layout .spindle-delay-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .planer-layout .spindle-delay-group .toggle-label {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+  .planer-layout .spindle-delay-group .toggle-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+  .planer-layout .coolant-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+  .planer-layout .coolant-controls {
+    flex: 1;
+    display: flex;
+    gap: 24px;
+    justify-content: flex-end;
+  }
+  .planer-layout .coolant-control {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .planer-layout .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .planer-layout .spindle-settings-group {
+    gap: 6px;
+  }
+  .planer-layout .form-row.delay-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .planer-layout .delay-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+  .planer-layout .delay-control {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .planer-layout label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .planer-layout input[type="number"] {
+    padding: 8px;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+  .planer-layout input[type="number"]:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .planer-layout select {
+    padding: 8px 8px 8px 8px;
+    padding-right: 24px;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+  }
+  .planer-layout select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .planer-layout .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .planer-layout .toggle-group label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 0.85rem;
+  }
+  .planer-layout .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+  .planer-layout .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .planer-layout .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    transition: 0.3s;
+    border-radius: 24px;
+  }
+  .planer-layout .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-primary);
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  .planer-layout input:checked + .toggle-slider {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .planer-layout input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+    background-color: white;
+  }
+  .planer-layout .orientation-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .planer-layout .orientation-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .planer-layout .orientation-select {
+    width: 100%;
+    padding: 8px;
+    padding-right: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    text-align: center;
+    text-align-last: center;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+  }
+  .planer-layout .orientation-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .planer-layout .button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .planer-layout .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .planer-layout .btn:hover {
+    opacity: 0.9;
+  }
+  .planer-layout .btn-secondary {
+    background: var(--color-surface-muted);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+  }
+  .planer-layout .btn-primary {
+    background: var(--color-accent);
+    color: white;
+  }
+  @media (max-width: 600px) {
+    .planer-layout .form-row {
+      grid-template-columns: 1fr;
+    }
+    .planer-layout .form-cards-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* === JOINTER CSS === */
+  .jointer-layout {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+  }
+  .jointer-layout .form-column {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .jointer-layout .plugin-dialog-footer {
+    grid-column: 1 / -1;
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .jointer-layout .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .jointer-layout .form-cards-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .jointer-layout .form-card {
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  .jointer-layout .form-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+  }
+  .jointer-layout .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .jointer-layout .form-row.single {
+    grid-template-columns: 1fr;
+  }
+  .jointer-layout .form-row.coolant-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: space-between;
+  }
+  .jointer-layout .coolant-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+  .jointer-layout .coolant-controls {
+    flex: 1;
+    display: flex;
+    gap: 24px;
+    justify-content: flex-end;
+  }
+  .jointer-layout .coolant-control {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .jointer-layout .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .jointer-layout label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .jointer-layout input[type="number"] {
+    padding: 8px;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+  .jointer-layout input[type="number"]:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .jointer-layout select {
+    padding: 8px 8px 8px 8px;
+    padding-right: 24px;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+  }
+  .jointer-layout select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .jointer-layout .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .jointer-layout .toggle-group label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 0.85rem;
+  }
+  .jointer-layout .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+  .jointer-layout .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .jointer-layout .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    transition: 0.3s;
+    border-radius: 24px;
+  }
+  .jointer-layout .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-primary);
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  .jointer-layout input:checked + .toggle-slider {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .jointer-layout input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+    background-color: white;
+  }
+  .jointer-layout .orientation-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .jointer-layout .orientation-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .jointer-layout .orientation-select {
+    width: 100%;
+    padding: 8px;
+    padding-right: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    text-align: center;
+    text-align-last: center;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+  }
+  .jointer-layout .orientation-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .jointer-layout .button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .jointer-layout .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-small);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .jointer-layout .btn:hover {
+    opacity: 0.9;
+  }
+  .jointer-layout .btn-secondary {
+    background: var(--color-surface-muted);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+  }
+  .jointer-layout .btn-primary {
+    background: var(--color-accent);
+    color: white;
+  }
+  @media (max-width: 600px) {
+    .jointer-layout .form-row {
+      grid-template-columns: 1fr;
+    }
+    .jointer-layout .form-cards-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* === BORING CSS === */
+  .boring-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+  .boring-layout .boring-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .boring-layout .form-cards-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .boring-layout .form-card {
+    margin-bottom: 0;
+  }
+  .boring-layout .plugin-dialog-footer {
+    border-top: 1px solid var(--color-border);
+    padding: 16px 24px;
+  }
+  .boring-layout .button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .boring-layout .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-small);
+    border: 1px solid var(--color-border);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .boring-layout .btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+  .boring-layout .btn-secondary:hover {
+    background: var(--color-surface-hover);
+  }
+  .boring-layout .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+  .boring-layout .btn-primary:hover {
+    background: var(--color-primary-hover);
+  }
+  .boring-layout .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .boring-layout .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .boring-layout .form-group label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .boring-layout .form-group input {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .boring-layout .form-group input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--color-surface-muted);
+  }
+  .boring-layout .cut-type-label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+  }
+  .boring-layout .cut-type-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .boring-layout .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+  .boring-layout .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .boring-layout .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    transition: 0.3s;
+    border-radius: 26px;
+  }
+  .boring-layout .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-primary);
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  .boring-layout input:checked + .toggle-slider {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .boring-layout input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+    background-color: white;
+  }
+  .boring-layout .cut-type-labels {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .boring-layout .cut-type-labels .active {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .boring-layout .form-row.coolant-row {
+    grid-template-columns: 1fr;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: space-between;
+  }
+  .boring-layout .coolant-label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    min-width: 80px;
+  }
+  .boring-layout .coolant-controls {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+  }
+  .boring-layout .coolant-control {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .boring-layout .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .boring-layout .toggle-group label:first-child {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+  .boring-layout .form-card {
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  .boring-layout .form-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+  }
+  @media (max-width: 600px) {
+    .boring-layout .form-row {
+      grid-template-columns: 1fr;
+    }
+    .boring-layout .form-cards-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div id="toolbench-root">
+  <div class="toolbench-loading">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+</div>
+
+<script>
+(function() {
+  var FALLBACK_PORT = __SERVER_PORT__;
+  var initialConfig = __INITIAL_CONFIG__;
+  var TOOL_LABEL = '__TOOL_MENU_LABEL__';
+
+  var resolveApiBaseUrl = function() {
+    if (window.ncSender && typeof window.ncSender.getApiBaseUrl === 'function') {
+      return window.ncSender.getApiBaseUrl(FALLBACK_PORT);
+    }
+    return '';
+  };
+
+  var BASE_URL = resolveApiBaseUrl();
+  var INCH_TO_MM = 25.4;
+  var MM_TO_INCH = 0.0393701;
+
+  async function init() {
+    try {
+      var settingsResponse = await fetch(BASE_URL + '/api/settings');
+      var appSettings = await settingsResponse.json();
+
+      var unitsPreference = appSettings.unitsPreference || 'metric';
+      var isImperial = unitsPreference === 'imperial';
+      var distanceUnit = isImperial ? 'in' : 'mm';
+      var feedRateUnit = isImperial ? 'in/min' : 'mm/min';
+
+      if (TOOL_LABEL === 'Planer') {
+        renderPlaner(isImperial, distanceUnit, feedRateUnit);
+      } else if (TOOL_LABEL === 'Jointer/Cutter') {
+        renderJointer(isImperial, distanceUnit, feedRateUnit);
+      } else if (TOOL_LABEL === 'Boring') {
+        renderBoring(isImperial, distanceUnit, feedRateUnit);
+      } else {
+        document.getElementById('toolbench-root').innerHTML =
+          '<div style="padding: 30px; text-align: center; color: var(--color-text-secondary);">' +
+          '<h3 style="color: var(--color-text-primary);">Unknown Tool</h3>' +
+          '<p>Tool label "' + TOOL_LABEL + '" not recognized.</p></div>';
+      }
+    } catch (err) {
+      console.error('ToolBench init error:', err);
+      document.getElementById('toolbench-root').innerHTML =
+        '<div style="padding: 30px; text-align: center; color: var(--color-text-secondary);">' +
+        '<h3 style="color: var(--color-text-primary);">Error Loading Plugin</h3>' +
+        '<p>' + err.message + '</p></div>';
+    }
+  }
+
+  // === SHARED TOOLTIP HELPERS ===
+  function createTooltip(useFixed) {
+    var tooltip = document.createElement('div');
+    tooltip.style.cssText =
+      'position: ' + (useFixed ? 'fixed' : 'absolute') + ';' +
+      'background: #d32f2f;' +
+      'color: white;' +
+      'padding: 8px 12px;' +
+      'border-radius: 4px;' +
+      'font-size: 0.85rem;' +
+      'z-index: 10000;' +
+      'pointer-events: none;' +
+      'opacity: 0;' +
+      'transition: opacity 0.2s;' +
+      'box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
+    tooltip.style.setProperty('white-space', 'nowrap');
+    document.body.appendChild(tooltip);
+
+    var arrow = document.createElement('div');
+    arrow.style.cssText =
+      'position: absolute;' +
+      'width: 0;' +
+      'height: 0;' +
+      'border-left: 6px solid transparent;' +
+      'border-right: 6px solid transparent;' +
+      'border-top: 6px solid #d32f2f;' +
+      'bottom: -6px;' +
+      'left: 50%;' +
+      'transform: translateX(-50%);';
+    tooltip.appendChild(arrow);
+
+    return { tooltip: tooltip, arrow: arrow };
+  }
+
+  function makeShowTooltip(tooltip, arrow) {
+    return function(element, message) {
+      var rect = element.getBoundingClientRect();
+      tooltip.textContent = message;
+      tooltip.appendChild(arrow);
+      tooltip.style.left = rect.left + (rect.width / 2) + 'px';
+      tooltip.style.top = (rect.top - 10) + 'px';
+      tooltip.style.transform = 'translate(-50%, -100%)';
+      tooltip.style.opacity = '1';
+      element.style.borderColor = '#d32f2f';
+      element.focus();
+    };
+  }
+
+  function makeHideTooltip(tooltip) {
+    return function() {
+      tooltip.style.opacity = '0';
+      setTimeout(function() {
+        tooltip.style.left = '-9999px';
+      }, 200);
+    };
+  }
+
+  function makeValidateInput(validationRules, customValidator) {
+    return function(id, value) {
+      var rules = validationRules[id];
+      if (!rules) return null;
+      var num = parseFloat(value);
+      if (isNaN(num)) {
+        return rules.label + ' must be a valid number';
+      }
+      if (rules.integer && !Number.isInteger(num)) {
+        return rules.label + ' must be a whole number';
+      }
+      if (num < rules.min) {
+        return rules.label + ' must be at least ' + rules.min;
+      }
+      if (num > rules.max) {
+        return rules.label + ' must not exceed ' + rules.max;
+      }
+      if (customValidator) {
+        var customError = customValidator(id, num);
+        if (customError) return customError;
+      }
+      return null;
+    };
+  }
+
+  function makeValidateAllInputs(validationRules, validateInput, showTooltip) {
+    return function() {
+      for (var id in validationRules) {
+        var element = document.getElementById(id);
+        if (!element) continue;
+        if (element.disabled) continue;
+        var error = validateInput(id, element.value);
+        if (error) {
+          showTooltip(element, error);
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+
+  function attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip) {
+    for (var id in validationRules) {
+      (function(fieldId) {
+        var element = document.getElementById(fieldId);
+        if (element) {
+          element.addEventListener('input', function() {
+            this.style.borderColor = '';
+            hideTooltip();
+          });
+          element.addEventListener('blur', function() {
+            var error = validateInput(fieldId, this.value);
+            if (error) {
+              showTooltip(this, error);
+              setTimeout(hideTooltip, 3000);
+            }
+          });
+        }
+      })(id);
+    }
+  }
+
+
+  // =========================================================================
+  // PLANER
+  // =========================================================================
+  function renderPlaner(isImperial, distanceUnit, feedRateUnit) {
+    var convertToDisplay = function(value) {
+      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : value;
+    };
+
+    var savedPlanerSettings = (initialConfig && initialConfig.planer) || {};
+    var defaultPatternType = savedPlanerSettings.patternType != null ? savedPlanerSettings.patternType : (savedPlanerSettings.invertOrientation ? 'zigzagX' : 'zigzagY');
+
+    var settings = {
+      xDimension: convertToDisplay(savedPlanerSettings.xDimension != null ? savedPlanerSettings.xDimension : 100),
+      yDimension: convertToDisplay(savedPlanerSettings.yDimension != null ? savedPlanerSettings.yDimension : 100),
+      depthOfCut: convertToDisplay(savedPlanerSettings.depthOfCut != null ? savedPlanerSettings.depthOfCut : 0.5),
+      targetDepth: convertToDisplay(savedPlanerSettings.targetDepth != null ? savedPlanerSettings.targetDepth : 0.5),
+      bitDiameter: convertToDisplay(savedPlanerSettings.bitDiameter != null ? savedPlanerSettings.bitDiameter : 25.4),
+      stepover: savedPlanerSettings.stepover != null ? savedPlanerSettings.stepover : 80,
+      overrun: convertToDisplay(savedPlanerSettings.overrun != null ? savedPlanerSettings.overrun : 5),
+      feedRate: convertToDisplay(savedPlanerSettings.feedRate != null ? savedPlanerSettings.feedRate : 2000),
+      plungeFeedRate: convertToDisplay(savedPlanerSettings.plungeFeedRate != null ? savedPlanerSettings.plungeFeedRate : 200),
+      spindleRpm: savedPlanerSettings.spindleRpm != null ? savedPlanerSettings.spindleRpm : 15000,
+      spindleDelay: savedPlanerSettings.spindleDelay != null ? savedPlanerSettings.spindleDelay : 5,
+      patternType: defaultPatternType,
+      mistM7: savedPlanerSettings.mistM7 != null ? savedPlanerSettings.mistM7 : false,
+      floodM8: savedPlanerSettings.floodM8 != null ? savedPlanerSettings.floodM8 : false
+    };
+
+    var root = document.getElementById('toolbench-root');
+    var html =
+      '<div class="planer-layout">' +
+        '<div class="form-column">' +
+          '<form id="planerForm" novalidate>' +
+            '<div class="form-cards-container">' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-row orientation-row">' +
+                  '<label class="orientation-label" for="patternType">Direction</label>' +
+                  '<select id="patternType" class="orientation-select">' +
+                    '<option value="zigzagX"' + (settings.patternType === 'zigzagX' ? ' selected' : '') + '>Horizontal</option>' +
+                    '<option value="zigzagY"' + (settings.patternType === 'zigzagY' ? ' selected' : '') + '>Vertical</option>' +
+                    '<option value="spiral"' + (settings.patternType === 'spiral' ? ' selected' : '') + '>Spiral</option>' +
+                  '</select>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="xDimension">X Dimension (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="xDimension" step="0.1" value="' + settings.xDimension + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="yDimension">Y Dimension (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="yDimension" step="0.1" value="' + settings.yDimension + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="depthOfCut">Depth of Cut (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="targetDepth">Target Depth (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="targetDepth" step="0.1" value="' + settings.targetDepth + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="stepover">Stepover (%)</label>' +
+                    '<input type="number" id="stepover" step="1" value="' + settings.stepover + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="overrun">Overrun (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="overrun" step="0.1" value="' + settings.overrun + '">' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="bitDiameter" step="0.1" value="' + settings.bitDiameter + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="feedRate">Feed Rate</label>' +
+                    '<input type="number" id="feedRate" step="1" value="' + settings.feedRate + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="spindleRpm">Spindle RPM</label>' +
+                    '<input type="number" id="spindleRpm" step="1" value="' + settings.spindleRpm + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="spindleDelay">Spindle Delay</label>' +
+                    '<input type="number" id="spindleDelay" min="0" max="30" step="1" value="' + settings.spindleDelay + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Mist Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="mistM7"' + (settings.mistM7 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Flood Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="floodM8"' + (settings.floodM8 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</div>' +
+      '<div class="plugin-dialog-footer">' +
+        '<div class="button-group">' +
+          '<button type="button" class="btn btn-secondary" id="btnClose">Cancel</button>' +
+          '<button type="button" class="btn btn-primary" id="btnGenerate">Generate G-code</button>' +
+        '</div>' +
+      '</div>';
+
+    root.innerHTML = html;
+
+    document.getElementById('btnClose').addEventListener('click', function() {
+      window.postMessage({ type: 'close-plugin-dialog' }, '*');
+    });
+    document.getElementById('btnGenerate').addEventListener('click', function() {
+      document.getElementById('planerForm').requestSubmit();
+    });
+
+    initPlanerLogic(isImperial);
+  }
+
+  function initPlanerLogic(isImperial) {
+    var validationRules = isImperial ? {
+      xDimension: { min: 0.5, max: Infinity, label: 'X Dimension' },
+      yDimension: { min: 0.5, max: Infinity, label: 'Y Dimension' },
+      depthOfCut: { min: 0.003, max: 1, label: 'Depth of Cut' },
+      targetDepth: { min: 0.003, max: 1, label: 'Target Depth' },
+      bitDiameter: { min: 0.03, max: 2, label: 'Bit Diameter' },
+      stepover: { min: 10, max: 100, label: 'Stepover' },
+      overrun: { min: 0, max: 10, label: 'Overrun' },
+      feedRate: { min: 1, max: 800, label: 'Feed Rate' },
+      spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    } : {
+      xDimension: { min: 10, max: Infinity, label: 'X Dimension' },
+      yDimension: { min: 10, max: Infinity, label: 'Y Dimension' },
+      depthOfCut: { min: 0.1, max: 20, label: 'Depth of Cut' },
+      targetDepth: { min: 0.1, max: 20, label: 'Target Depth' },
+      bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
+      stepover: { min: 10, max: 100, label: 'Stepover' },
+      overrun: { min: 0, max: 250, label: 'Overrun' },
+      feedRate: { min: 1, max: 20000, label: 'Feed Rate' },
+      spindleRpm: { min: 2000, max: 24000, label: 'Spindle RPM' },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    };
+
+    var ttObj = createTooltip(false);
+    var showTooltip = makeShowTooltip(ttObj.tooltip, ttObj.arrow);
+    var hideTooltip = makeHideTooltip(ttObj.tooltip);
+    var validateInput = makeValidateInput(validationRules);
+    var validateAllInputs = makeValidateAllInputs(validationRules, validateInput, showTooltip);
+    attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip);
+
+    function addStartupSequence(gcode, options) {
+      var mistM7 = options.mistM7, floodM8 = options.floodM8, spindleRpm = options.spindleRpm;
+      var spindleDelay = options.spindleDelay, safeHeight = options.safeHeight;
+      var currentDepth = options.currentDepth, previousDepth = options.previousDepth;
+      var plungeFeedRate = options.plungeFeedRate;
+
+      if (mistM7) {
+        gcode.push('M7 ; Mist coolant on');
+      }
+      if (floodM8) {
+        gcode.push('M8 ; Flood coolant on');
+      }
+      if (spindleRpm > 0) {
+        gcode.push('M3 S' + spindleRpm + ' ; Start spindle');
+      }
+      if (spindleRpm > 0 && spindleDelay > 0) {
+        gcode.push('G4 P' + spindleDelay + ' ; Wait ' + spindleDelay + ' seconds');
+      }
+      gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+
+      var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+      var targetDepth = -currentDepth;
+      var rapidDepth = -(previousDepth || 0) - rapidClearance;
+
+      if (rapidDepth > targetDepth) {
+        gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+      }
+      gcode.push('G1 Z' + targetDepth.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+    }
+
+    function generatePlanerGcode(params) {
+      var startX = params.startX, startY = params.startY;
+      var xDimension = params.xDimension, yDimension = params.yDimension;
+      var depthOfCut = params.depthOfCut, targetDepth = params.targetDepth;
+      var bitDiameter = params.bitDiameter, stepover = params.stepover;
+      var overrun = params.overrun;
+      var feedRate = params.feedRate, plungeFeedRate = params.plungeFeedRate;
+      var spindleRpm = params.spindleRpm;
+      var patternType = params.patternType, spindleDelay = params.spindleDelay;
+      var mistM7 = params.mistM7, floodM8 = params.floodM8;
+
+      var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
+      var unitsCode = isImperial ? 'G20' : 'G21';
+      var unitsLabel = isImperial ? 'inch' : 'mm';
+
+      var stepoverDistance = (bitDiameter * stepover) / 100;
+      var numDepthPasses = Math.ceil(targetDepth / depthOfCut);
+      var selectedPattern = patternType || 'zigzagY';
+      var invertOrientation = selectedPattern === 'zigzagX';
+      var isSpiral = selectedPattern === 'spiral';
+
+      var adjustedStartX = startX - overrun;
+      var adjustedStartY = startY - overrun;
+      var adjustedXDimension = xDimension + (overrun * 2);
+      var adjustedYDimension = yDimension + (overrun * 2);
+
+      var stepDimension = invertOrientation ? adjustedYDimension : adjustedXDimension;
+      var numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
+
+      var gcode = [];
+      gcode.push('(Planer Operation)');
+      gcode.push('(Start: X' + startX + ' Y' + startY + ')');
+      gcode.push('(Dimensions: ' + xDimension + ' x ' + yDimension + ' ' + unitsLabel + ')');
+      gcode.push('(Overrun: ' + overrun + unitsLabel + ')');
+      gcode.push('(Actual Cut Area: ' + adjustedXDimension + ' x ' + adjustedYDimension + ' ' + unitsLabel + ')');
+      gcode.push('(Bit Diameter: ' + bitDiameter + unitsLabel + ', Stepover: ' + stepover + '%)');
+      gcode.push('(Target Depth: ' + targetDepth + unitsLabel + ' in ' + numDepthPasses + ' passes)');
+      gcode.push('(Feed Rate: ' + feedRate + unitsLabel + '/min, Spindle: ' + spindleRpm + 'RPM)');
+      gcode.push('');
+      gcode.push(unitsCode + ' ; ' + (isImperial ? 'Imperial' : 'Metric') + ' units');
+      gcode.push('G90 ; Absolute positioning');
+      gcode.push('G94 ; Feed rate per minute');
+      gcode.push('');
+      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      gcode.push('');
+
+      var currentDepth = 0;
+      var previousDepth = 0;
+      for (var depthPass = 0; depthPass < numDepthPasses; depthPass++) {
+        previousDepth = currentDepth;
+        currentDepth = Math.min(currentDepth + depthOfCut, targetDepth);
+        gcode.push('(Depth pass ' + (depthPass + 1) + '/' + numDepthPasses + ' - Z' + (-currentDepth).toFixed(3) + ')');
+
+        gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
+
+        if (depthPass === 0) {
+          addStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+        } else {
+          var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+          var td = -currentDepth;
+          var rapidDepth = -previousDepth + rapidClearance;
+
+          gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+          if (rapidDepth > td) {
+            gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+          }
+          gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+        }
+
+        if (isSpiral) {
+          var effectiveStep = Math.max(Math.min(stepoverDistance, Math.min(adjustedXDimension, adjustedYDimension) / 2), 0.1);
+          var left = adjustedStartX;
+          var right = adjustedStartX + adjustedXDimension;
+          var top = adjustedStartY;
+          var bottom = adjustedStartY + adjustedYDimension;
+          var currentX = adjustedStartX;
+          var currentY = adjustedStartY;
+
+          while (right - left > 0 && bottom - top > 0) {
+            gcode.push('G1 X' + right.toFixed(3) + ' Y' + top.toFixed(3) + ' F' + feedRate);
+            currentX = right;
+            currentY = top;
+
+            top += effectiveStep;
+            if (top >= bottom) break;
+
+            gcode.push('G1 X' + currentX.toFixed(3) + ' Y' + bottom.toFixed(3) + ' F' + feedRate);
+            currentY = bottom;
+
+            right -= effectiveStep;
+            if (left >= right) break;
+
+            gcode.push('G1 X' + left.toFixed(3) + ' Y' + currentY.toFixed(3) + ' F' + feedRate);
+            currentX = left;
+
+            bottom -= effectiveStep;
+            if (top >= bottom) break;
+
+            gcode.push('G1 X' + currentX.toFixed(3) + ' Y' + top.toFixed(3) + ' F' + feedRate);
+            currentY = top;
+
+            left += effectiveStep;
+            if (left >= right) break;
+
+            gcode.push('G1 X' + left.toFixed(3) + ' Y' + currentY.toFixed(3) + ' F' + feedRate);
+            currentX = left;
+          }
+
+          var centerX = adjustedStartX + (adjustedXDimension / 2);
+          var centerY = adjustedStartY + (adjustedYDimension / 2);
+          if (Math.abs(currentX - centerX) > 0.01 || Math.abs(currentY - centerY) > 0.01) {
+            gcode.push('G1 X' + centerX.toFixed(3) + ' Y' + centerY.toFixed(3) + ' F' + feedRate);
+          }
+        } else {
+          var direction = 1;
+
+          if (invertOrientation) {
+            for (var pass = 0; pass < numPasses; pass++) {
+              var yPos = adjustedStartY + (pass * stepoverDistance);
+              if (pass > 0) {
+                gcode.push('G1 Y' + yPos.toFixed(3) + ' F' + feedRate + ' ; Step over');
+              }
+              if (direction === 1) {
+                gcode.push('G1 X' + (adjustedStartX + adjustedXDimension).toFixed(3) + ' F' + feedRate);
+              } else {
+                gcode.push('G1 X' + adjustedStartX.toFixed(3) + ' F' + feedRate);
+              }
+              direction *= -1;
+            }
+          } else {
+            for (var pass = 0; pass < numPasses; pass++) {
+              var xPos = adjustedStartX + (pass * stepoverDistance);
+              if (pass > 0) {
+                gcode.push('G1 X' + xPos.toFixed(3) + ' F' + feedRate + ' ; Step over');
+              }
+              if (direction === 1) {
+                gcode.push('G1 Y' + (adjustedStartY + adjustedYDimension).toFixed(3) + ' F' + feedRate);
+              } else {
+                gcode.push('G1 Y' + adjustedStartY.toFixed(3) + ' F' + feedRate);
+              }
+              direction *= -1;
+            }
+          }
+        }
+
+        gcode.push('G0 Z' + safeHeight + ' ; Retract to safe height');
+        gcode.push('');
+      }
+
+      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (mistM7 || floodM8) {
+        gcode.push('M9 ; Coolant off');
+      }
+      if (spindleRpm > 0) {
+        gcode.push('M5 ; Stop spindle');
+      }
+      gcode.push('M30 ; End program');
+
+      return gcode.join('\n');
+    }
+
+    document.getElementById('planerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      if (!validateAllInputs()) {
+        return;
+      }
+
+      var patternTypeSelect = document.getElementById('patternType');
+      var patternType = patternTypeSelect ? patternTypeSelect.value : 'zigzagY';
+      var invertOrientation = patternType === 'zigzagX';
+
+      var displayValues = {
+        xDimension: parseFloat(document.getElementById('xDimension').value),
+        yDimension: parseFloat(document.getElementById('yDimension').value),
+        depthOfCut: parseFloat(document.getElementById('depthOfCut').value),
+        targetDepth: parseFloat(document.getElementById('targetDepth').value),
+        bitDiameter: parseFloat(document.getElementById('bitDiameter').value),
+        stepover: parseFloat(document.getElementById('stepover').value),
+        overrun: parseFloat(document.getElementById('overrun').value),
+        feedRate: parseFloat(document.getElementById('feedRate').value),
+        spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
+        mistM7: document.getElementById('mistM7').checked,
+        floodM8: document.getElementById('floodM8').checked,
+        spindleDelay: parseInt(document.getElementById('spindleDelay').value)
+      };
+
+      var response = await fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings');
+      var savedSettings = response.ok ? await response.json() : {};
+      var convertToDisplay = function(value) { return isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value; };
+      var currentPlungeFeedRate = convertToDisplay(savedSettings.planer != null && savedSettings.planer.plungeFeedRate != null ? savedSettings.planer.plungeFeedRate : 200);
+
+      var convertToMetric = function(value) { return isImperial ? value * INCH_TO_MM : value; };
+      var settingsToSave = {
+        planer: {
+          xDimension: convertToMetric(displayValues.xDimension),
+          yDimension: convertToMetric(displayValues.yDimension),
+          depthOfCut: convertToMetric(displayValues.depthOfCut),
+          targetDepth: convertToMetric(displayValues.targetDepth),
+          bitDiameter: convertToMetric(displayValues.bitDiameter),
+          stepover: displayValues.stepover,
+          overrun: convertToMetric(displayValues.overrun),
+          feedRate: convertToMetric(displayValues.feedRate),
+          plungeFeedRate: convertToMetric(currentPlungeFeedRate),
+          spindleRpm: displayValues.spindleRpm,
+          spindleDelay: displayValues.spindleDelay,
+          patternType: patternType,
+          invertOrientation: invertOrientation,
+          mistM7: displayValues.mistM7,
+          floodM8: displayValues.floodM8
+        }
+      };
+
+      var params = {
+        startX: 0,
+        startY: 0,
+        xDimension: displayValues.xDimension,
+        yDimension: displayValues.yDimension,
+        depthOfCut: displayValues.depthOfCut,
+        targetDepth: displayValues.targetDepth,
+        bitDiameter: displayValues.bitDiameter,
+        stepover: displayValues.stepover,
+        overrun: displayValues.overrun,
+        feedRate: displayValues.feedRate,
+        plungeFeedRate: currentPlungeFeedRate,
+        spindleRpm: displayValues.spindleRpm,
+        spindleDelay: displayValues.spindleDelay,
+        patternType: patternType,
+        invertOrientation: invertOrientation,
+        mistM7: displayValues.mistM7,
+        floodM8: displayValues.floodM8,
+        isImperial: isImperial
+      };
+
+      var gcode = generatePlanerGcode(params);
+
+      fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsToSave)
+      }).catch(function(err) { console.error('Failed to save settings:', err); });
+
+      try {
+        var uploadResponse = await fetch(BASE_URL + '/api/gcode-files/load-temp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: 'Planer.nc', content: gcode })
+        });
+
+        if (uploadResponse.ok) {
+          setTimeout(function() {
+            window.postMessage({ type: 'close-plugin-dialog' }, '*');
+          }, 100);
+        } else {
+          alert('Failed to upload G-code file');
+        }
+      } catch (error) {
+        alert('Error uploading G-code file: ' + error.message);
+      }
+    });
+  }
+
+
+  // =========================================================================
+  // JOINTER/CUTTER
+  // =========================================================================
+  function renderJointer(isImperial, distanceUnit, feedRateUnit) {
+    var convertToDisplay = function(value) {
+      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : value;
+    };
+
+    var savedJointerSettings = (initialConfig && initialConfig.jointer) || {};
+
+    var settings = {
+      edgeLength: convertToDisplay(savedJointerSettings.edgeLength != null ? savedJointerSettings.edgeLength : 100),
+      edge: savedJointerSettings.edge != null ? savedJointerSettings.edge : 'right',
+      depthOfCut: convertToDisplay(savedJointerSettings.depthOfCut != null ? savedJointerSettings.depthOfCut : 5),
+      materialThickness: convertToDisplay(savedJointerSettings.materialThickness != null ? savedJointerSettings.materialThickness : 5),
+      trimWidth: convertToDisplay(savedJointerSettings.trimWidth != null ? savedJointerSettings.trimWidth : 0.5),
+      numberOfPasses: savedJointerSettings.numberOfPasses != null ? savedJointerSettings.numberOfPasses : 1,
+      leadInOutDistance: convertToDisplay(savedJointerSettings.leadInOutDistance != null ? savedJointerSettings.leadInOutDistance : 5),
+      cutDirection: savedJointerSettings.cutDirection != null ? savedJointerSettings.cutDirection : 'Conventional',
+      bitDiameter: convertToDisplay(savedJointerSettings.bitDiameter != null ? savedJointerSettings.bitDiameter : 6.35),
+      feedRate: convertToDisplay(savedJointerSettings.feedRate != null ? savedJointerSettings.feedRate : 1000),
+      plungeFeedRate: convertToDisplay(savedJointerSettings.plungeFeedRate != null ? savedJointerSettings.plungeFeedRate : 200),
+      spindleRpm: savedJointerSettings.spindleRpm != null ? savedJointerSettings.spindleRpm : 10000,
+      mistM7: savedJointerSettings.mistM7 != null ? savedJointerSettings.mistM7 : false,
+      floodM8: savedJointerSettings.floodM8 != null ? savedJointerSettings.floodM8 : false,
+      spindleDelay: savedJointerSettings.spindleDelay != null ? savedJointerSettings.spindleDelay : 5
+    };
+
+    var root = document.getElementById('toolbench-root');
+    var html =
+      '<div class="jointer-layout">' +
+        '<div class="form-column">' +
+          '<form id="jointerForm" novalidate>' +
+            '<div class="form-cards-container">' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="edgeLength">Edge Length (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="edgeLength" step="0.1" value="' + settings.edgeLength + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="edge">Edge</label>' +
+                    '<select id="edge" class="orientation-select">' +
+                      '<option value="left"' + (settings.edge === 'left' ? ' selected' : '') + '>Left</option>' +
+                      '<option value="right"' + (settings.edge === 'right' ? ' selected' : '') + '>Right</option>' +
+                      '<option value="front"' + (settings.edge === 'front' ? ' selected' : '') + '>Front</option>' +
+                      '<option value="back"' + (settings.edge === 'back' ? ' selected' : '') + '>Back</option>' +
+                    '</select>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="depthOfCut">Depth of Cut (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="materialThickness">Material Thickness (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="materialThickness" step="0.1" value="' + settings.materialThickness + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="trimWidth">Trim Width (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="trimWidth" step="0.01" value="' + settings.trimWidth + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="numberOfPasses">Number of Passes</label>' +
+                    '<input type="number" id="numberOfPasses" step="1" value="' + settings.numberOfPasses + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="leadInOutDistance">Lead-In/Out (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="leadInOutDistance" step="0.1" value="' + settings.leadInOutDistance + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="cutDirection">Cut Direction</label>' +
+                    '<select id="cutDirection">' +
+                      '<option value="Conventional"' + (settings.cutDirection === 'Conventional' ? ' selected' : '') + '>Conventional</option>' +
+                      '<option value="Climb"' + (settings.cutDirection === 'Climb' ? ' selected' : '') + '>Climb</option>' +
+                    '</select>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="bitDiameter" step="0.01" value="' + settings.bitDiameter + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="feedRate">Feed Rate</label>' +
+                    '<input type="number" id="feedRate" step="1" value="' + settings.feedRate + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="spindleRpm">Spindle RPM</label>' +
+                    '<input type="number" id="spindleRpm" step="1" value="' + settings.spindleRpm + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="spindleDelay">Spindle Delay</label>' +
+                    '<input type="number" id="spindleDelay" min="0" max="30" step="1" value="' + settings.spindleDelay + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Mist Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="mistM7"' + (settings.mistM7 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Flood Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="floodM8"' + (settings.floodM8 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</div>' +
+      '<div class="plugin-dialog-footer">' +
+        '<div class="button-group">' +
+          '<button type="button" class="btn btn-secondary" id="btnClose">Cancel</button>' +
+          '<button type="button" class="btn btn-primary" id="btnGenerate">Generate G-code</button>' +
+        '</div>' +
+      '</div>';
+
+    root.innerHTML = html;
+
+    document.getElementById('btnClose').addEventListener('click', function() {
+      window.postMessage({ type: 'close-plugin-dialog' }, '*');
+    });
+    document.getElementById('btnGenerate').addEventListener('click', function() {
+      document.getElementById('jointerForm').requestSubmit();
+    });
+
+    initJointerLogic(isImperial);
+  }
+
+  function initJointerLogic(isImperial) {
+    var validationRules = isImperial ? {
+      edgeLength: { min: 1, max: 49, label: 'Edge Length' },
+      depthOfCut: { min: 0.1, max: 4, label: 'Depth of Cut' },
+      materialThickness: { min: 0.1, max: 4, label: 'Material Thickness' },
+      trimWidth: { min: 0, max: 40, label: 'Trim Width' },
+      numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
+      leadInOutDistance: { min: 0.1, max: 2, label: 'Lead-In/Out Distance' },
+      bitDiameter: { min: 0.25, max: 2, label: 'Bit Diameter' },
+      feedRate: { min: 1, max: 400, label: 'Feed Rate' },
+      spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    } : {
+      edgeLength: { min: 10, max: 5000, label: 'Edge Length' },
+      depthOfCut: { min: 0.1, max: 100, label: 'Depth of Cut' },
+      materialThickness: { min: 1, max: 100, label: 'Material Thickness' },
+      trimWidth: { min: 0, max: 1000, label: 'Trim Width' },
+      numberOfPasses: { min: 1, max: 5, label: 'Number of Passes', integer: true },
+      leadInOutDistance: { min: 1, max: 50, label: 'Lead-In/Out Distance' },
+      bitDiameter: { min: 1, max: 50, label: 'Bit Diameter' },
+      feedRate: { min: 1, max: 10000, label: 'Feed Rate' },
+      spindleRpm: { min: 1000, max: 24000, label: 'Spindle RPM' },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    };
+
+    var ttObj = createTooltip(false);
+    var showTooltip = makeShowTooltip(ttObj.tooltip, ttObj.arrow);
+    var hideTooltip = makeHideTooltip(ttObj.tooltip);
+    var validateInput = makeValidateInput(validationRules);
+    var validateAllInputs = makeValidateAllInputs(validationRules, validateInput, showTooltip);
+    attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip);
+
+    function addJointerStartupSequence(gcode, options) {
+      var mistM7 = options.mistM7, floodM8 = options.floodM8, spindleRpm = options.spindleRpm;
+      var spindleDelay = options.spindleDelay, safeHeight = options.safeHeight;
+      var currentDepth = options.currentDepth, previousDepth = options.previousDepth;
+      var plungeFeedRate = options.plungeFeedRate;
+
+      if (mistM7) {
+        gcode.push('M7 ; Mist coolant on');
+      }
+      if (floodM8) {
+        gcode.push('M8 ; Flood coolant on');
+      }
+      if (spindleRpm > 0) {
+        gcode.push('M3 S' + spindleRpm + ' ; Start spindle');
+      }
+      if (spindleRpm > 0 && spindleDelay > 0) {
+        gcode.push('G4 P' + spindleDelay + ' ; Wait ' + spindleDelay + ' seconds');
+      }
+      gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+
+      var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+      var targetDepth = -currentDepth;
+      var rapidDepth = -(previousDepth || 0) - rapidClearance;
+
+      if (rapidDepth > targetDepth) {
+        gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+      }
+      gcode.push('G1 Z' + targetDepth.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+    }
+
+    function generateJointerGcode(params) {
+      var edgeLength = params.edgeLength, edge = params.edge;
+      var depthOfCut = params.depthOfCut, materialThickness = params.materialThickness;
+      var trimWidth = params.trimWidth, numberOfPasses = params.numberOfPasses;
+      var leadInOutDistance = params.leadInOutDistance, cutDirection = params.cutDirection;
+      var bitDiameter = params.bitDiameter;
+      var feedRate = params.feedRate, plungeFeedRate = params.plungeFeedRate;
+      var spindleRpm = params.spindleRpm;
+      var mistM7 = params.mistM7, floodM8 = params.floodM8;
+      var spindleDelay = params.spindleDelay;
+
+      var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
+      var unitsCode = isImperial ? 'G20' : 'G21';
+      var unitsLabel = isImperial ? 'inch' : 'mm';
+
+      var numDepthPasses = Math.ceil(materialThickness / depthOfCut);
+
+      var gcode = [];
+      gcode.push('(Jointer Operation)');
+      gcode.push('(Edge: ' + edge + ')');
+      gcode.push('(Edge Length: ' + edgeLength + unitsLabel + ')');
+      gcode.push('(Material Thickness: ' + materialThickness + unitsLabel + ' in ' + numDepthPasses + ' depth passes)');
+      gcode.push('(Trim Width: ' + trimWidth + unitsLabel + ', Passes: ' + numberOfPasses + ')');
+      gcode.push('(Lead-In/Out: ' + leadInOutDistance + unitsLabel + ')');
+      gcode.push('(Bit Diameter: ' + bitDiameter + unitsLabel + ')');
+      gcode.push('(Feed Rate: ' + feedRate + unitsLabel + '/min, Spindle: ' + spindleRpm + 'RPM)');
+      gcode.push('');
+      gcode.push(unitsCode + ' ; ' + (isImperial ? 'Imperial' : 'Metric') + ' units');
+      gcode.push('G90 ; Absolute positioning');
+      gcode.push('G94 ; Feed rate per minute');
+      gcode.push('');
+      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      gcode.push('');
+
+      for (var pass = 0; pass < numberOfPasses; pass++) {
+        var offset = (bitDiameter / 2) - trimWidth + (pass * trimWidth);
+        gcode.push('(Trim pass ' + (pass + 1) + '/' + numberOfPasses + ' - Offset: ' + offset.toFixed(3) + unitsLabel + ')');
+
+        var currentDepth = 0;
+        var previousDepth = 0;
+        for (var depthPass = 0; depthPass < numDepthPasses; depthPass++) {
+          previousDepth = currentDepth;
+          currentDepth = Math.min(currentDepth + depthOfCut, materialThickness);
+          gcode.push('(Depth pass ' + (depthPass + 1) + '/' + numDepthPasses + ' - Z' + (-currentDepth).toFixed(3) + ')');
+
+          if (edge === 'left') {
+            var startX = -offset;
+            var startY, endY;
+            if (cutDirection === 'Conventional') {
+              startY = edgeLength + leadInOutDistance;
+              endY = -leadInOutDistance;
+            } else {
+              startY = -leadInOutDistance;
+              endY = edgeLength + leadInOutDistance;
+            }
+            gcode.push('G0 X' + startX.toFixed(3) + ' Y' + startY.toFixed(3) + ' ; Move to start (with lead-in)');
+            if (pass === 0 && depthPass === 0) {
+              addJointerStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+            } else {
+              var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+              var td = -currentDepth;
+              var rapidDepth = -previousDepth + rapidClearance;
+              gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+              if (rapidDepth > td) {
+                gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+              }
+              gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+            }
+            gcode.push('G1 Y' + endY.toFixed(3) + ' F' + feedRate + ' ; Cut along left edge (' + cutDirection.toLowerCase() + ')');
+            gcode.push('G0 Z' + safeHeight + ' ; Retract');
+          } else if (edge === 'right') {
+            var startX = offset;
+            var startY, endY;
+            if (cutDirection === 'Conventional') {
+              startY = -leadInOutDistance;
+              endY = edgeLength + leadInOutDistance;
+            } else {
+              startY = edgeLength + leadInOutDistance;
+              endY = -leadInOutDistance;
+            }
+            gcode.push('G0 X' + startX.toFixed(3) + ' Y' + startY.toFixed(3) + ' ; Move to start (with lead-in)');
+            if (pass === 0 && depthPass === 0) {
+              addJointerStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+            } else {
+              var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+              var td = -currentDepth;
+              var rapidDepth = -previousDepth + rapidClearance;
+              gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+              if (rapidDepth > td) {
+                gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+              }
+              gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+            }
+            gcode.push('G1 Y' + endY.toFixed(3) + ' F' + feedRate + ' ; Cut along right edge (' + cutDirection.toLowerCase() + ')');
+            gcode.push('G0 Z' + safeHeight + ' ; Retract');
+          } else if (edge === 'front') {
+            var startYf = offset;
+            var startXf, endXf;
+            if (cutDirection === 'Conventional') {
+              startXf = edgeLength + leadInOutDistance;
+              endXf = -leadInOutDistance;
+            } else {
+              startXf = -leadInOutDistance;
+              endXf = edgeLength + leadInOutDistance;
+            }
+            gcode.push('G0 X' + startXf.toFixed(3) + ' Y' + startYf.toFixed(3) + ' ; Move to start (with lead-in)');
+            if (pass === 0 && depthPass === 0) {
+              addJointerStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+            } else {
+              var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+              var td = -currentDepth;
+              var rapidDepth = -previousDepth + rapidClearance;
+              gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+              if (rapidDepth > td) {
+                gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+              }
+              gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+            }
+            gcode.push('G1 X' + endXf.toFixed(3) + ' F' + feedRate + ' ; Cut along front edge (' + cutDirection.toLowerCase() + ')');
+            gcode.push('G0 Z' + safeHeight + ' ; Retract');
+          } else {
+            var startYb = -offset;
+            var startXb, endXb;
+            if (cutDirection === 'Conventional') {
+              startXb = -leadInOutDistance;
+              endXb = edgeLength + leadInOutDistance;
+            } else {
+              startXb = edgeLength + leadInOutDistance;
+              endXb = -leadInOutDistance;
+            }
+            gcode.push('G0 X' + startXb.toFixed(3) + ' Y' + startYb.toFixed(3) + ' ; Move to start (with lead-in)');
+            if (pass === 0 && depthPass === 0) {
+              addJointerStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+            } else {
+              var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+              var td = -currentDepth;
+              var rapidDepth = -previousDepth + rapidClearance;
+              gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
+              if (rapidDepth > td) {
+                gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+              }
+              gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
+            }
+            gcode.push('G1 X' + endXb.toFixed(3) + ' F' + feedRate + ' ; Cut along back edge (' + cutDirection.toLowerCase() + ')');
+            gcode.push('G0 Z' + safeHeight + ' ; Retract');
+          }
+        }
+        gcode.push('');
+      }
+
+      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (mistM7 || floodM8) {
+        gcode.push('M9 ; Coolant off');
+      }
+      if (spindleRpm > 0) {
+        gcode.push('M5 ; Stop spindle');
+      }
+      gcode.push('M30 ; End program');
+
+      return gcode.join('\n');
+    }
+
+    document.getElementById('jointerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      if (!validateAllInputs()) {
+        return;
+      }
+
+      var edgeSelect = document.getElementById('edge');
+      var edge = edgeSelect ? edgeSelect.value : 'right';
+
+      var displayValues = {
+        edgeLength: parseFloat(document.getElementById('edgeLength').value),
+        edge: edge,
+        depthOfCut: parseFloat(document.getElementById('depthOfCut').value),
+        materialThickness: parseFloat(document.getElementById('materialThickness').value),
+        trimWidth: parseFloat(document.getElementById('trimWidth').value),
+        numberOfPasses: parseInt(document.getElementById('numberOfPasses').value),
+        leadInOutDistance: parseFloat(document.getElementById('leadInOutDistance').value),
+        cutDirection: document.getElementById('cutDirection').value,
+        bitDiameter: parseFloat(document.getElementById('bitDiameter').value),
+        feedRate: parseFloat(document.getElementById('feedRate').value),
+        spindleRpm: parseFloat(document.getElementById('spindleRpm').value),
+        mistM7: document.getElementById('mistM7').checked,
+        floodM8: document.getElementById('floodM8').checked,
+        spindleDelay: parseInt(document.getElementById('spindleDelay').value)
+      };
+
+      var response = await fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings');
+      var savedSettings = response.ok ? await response.json() : {};
+      var convertToDisplay = function(value) { return isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value; };
+      var currentPlungeFeedRate = convertToDisplay(savedSettings.jointer != null && savedSettings.jointer.plungeFeedRate != null ? savedSettings.jointer.plungeFeedRate : 200);
+
+      var convertToMetric = function(value) { return isImperial ? value * INCH_TO_MM : value; };
+      var settingsToSave = {
+        jointer: {
+          edgeLength: convertToMetric(displayValues.edgeLength),
+          edge: displayValues.edge,
+          depthOfCut: convertToMetric(displayValues.depthOfCut),
+          materialThickness: convertToMetric(displayValues.materialThickness),
+          trimWidth: convertToMetric(displayValues.trimWidth),
+          numberOfPasses: displayValues.numberOfPasses,
+          leadInOutDistance: convertToMetric(displayValues.leadInOutDistance),
+          cutDirection: displayValues.cutDirection,
+          bitDiameter: convertToMetric(displayValues.bitDiameter),
+          feedRate: convertToMetric(displayValues.feedRate),
+          plungeFeedRate: convertToMetric(currentPlungeFeedRate),
+          spindleRpm: displayValues.spindleRpm,
+          mistM7: displayValues.mistM7,
+          floodM8: displayValues.floodM8,
+          spindleDelay: displayValues.spindleDelay
+        }
+      };
+
+      var params = {
+        edgeLength: displayValues.edgeLength,
+        edge: displayValues.edge,
+        depthOfCut: displayValues.depthOfCut,
+        materialThickness: displayValues.materialThickness,
+        trimWidth: displayValues.trimWidth,
+        numberOfPasses: displayValues.numberOfPasses,
+        leadInOutDistance: displayValues.leadInOutDistance,
+        cutDirection: displayValues.cutDirection,
+        bitDiameter: displayValues.bitDiameter,
+        feedRate: displayValues.feedRate,
+        plungeFeedRate: currentPlungeFeedRate,
+        spindleRpm: displayValues.spindleRpm,
+        mistM7: displayValues.mistM7,
+        floodM8: displayValues.floodM8,
+        spindleDelay: displayValues.spindleDelay,
+        isImperial: isImperial
+      };
+
+      var gcode = generateJointerGcode(params);
+
+      fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsToSave)
+      }).catch(function(err) { console.error('Failed to save settings:', err); });
+
+      try {
+        var uploadResponse = await fetch(BASE_URL + '/api/gcode-files/load-temp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: 'Jointer.nc', content: gcode })
+        });
+
+        if (uploadResponse.ok) {
+          setTimeout(function() {
+            window.postMessage({ type: 'close-plugin-dialog' }, '*');
+          }, 100);
+        } else {
+          alert('Failed to upload G-code file');
+        }
+      } catch (error) {
+        alert('Error uploading G-code file: ' + error.message);
+      }
+    });
+  }
+
+
+  // =========================================================================
+  // BORING
+  // =========================================================================
+  function renderBoring(isImperial, distanceUnit, feedRateUnit) {
+    var convertToDisplay = function(metricValue) {
+      if (isImperial) {
+        return (metricValue / 25.4).toFixed(4);
+      }
+      return metricValue;
+    };
+
+    var savedBoringSettings = (initialConfig && initialConfig.boring) || {};
+
+    var settings = {
+      xCount: savedBoringSettings.xCount != null ? savedBoringSettings.xCount : 1,
+      xDistance: convertToDisplay(savedBoringSettings.xDistance != null ? savedBoringSettings.xDistance : 50),
+      yCount: savedBoringSettings.yCount != null ? savedBoringSettings.yCount : 1,
+      yDistance: convertToDisplay(savedBoringSettings.yDistance != null ? savedBoringSettings.yDistance : 50),
+      diameter: convertToDisplay(savedBoringSettings.diameter != null ? savedBoringSettings.diameter : 10),
+      depth: convertToDisplay(savedBoringSettings.depth != null ? savedBoringSettings.depth : 5),
+      cutType: savedBoringSettings.cutType != null ? savedBoringSettings.cutType : 'inner',
+      toolDiameter: convertToDisplay(savedBoringSettings.toolDiameter != null ? savedBoringSettings.toolDiameter : 3.17),
+      pitch: convertToDisplay(savedBoringSettings.pitch != null ? savedBoringSettings.pitch : 2),
+      feedRate: convertToDisplay(savedBoringSettings.feedRate != null ? savedBoringSettings.feedRate : 300),
+      plungeFeedRate: convertToDisplay(savedBoringSettings.plungeFeedRate != null ? savedBoringSettings.plungeFeedRate : 200),
+      spindleRPM: savedBoringSettings.spindleRPM != null ? savedBoringSettings.spindleRPM : 18000,
+      spindleDelay: savedBoringSettings.spindleDelay != null ? savedBoringSettings.spindleDelay : 6,
+      mistM7: savedBoringSettings.mistM7 != null ? savedBoringSettings.mistM7 : false,
+      floodM8: savedBoringSettings.floodM8 != null ? savedBoringSettings.floodM8 : false
+    };
+
+    var root = document.getElementById('toolbench-root');
+    var html =
+      '<div class="boring-layout">' +
+        '<div class="boring-content">' +
+          '<form id="boringForm" novalidate>' +
+            '<div class="form-cards-container">' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label class="cut-type-label">Cut</label>' +
+                    '<div class="cut-type-toggle">' +
+                      '<div class="cut-type-labels">' +
+                        '<span id="innerLabel" class="' + (settings.cutType === 'inner' ? 'active' : '') + '">Inner</span>' +
+                      '</div>' +
+                      '<label class="toggle-switch">' +
+                        '<input type="checkbox" id="cutType"' + (settings.cutType === 'outer' ? ' checked' : '') + '>' +
+                        '<span class="toggle-slider"></span>' +
+                      '</label>' +
+                      '<div class="cut-type-labels">' +
+                        '<span id="outerLabel" class="' + (settings.cutType === 'outer' ? 'active' : '') + '">Outer</span>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="diameter">Diameter (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="diameter" min="0.1" step="0.1" value="' + settings.diameter + '" required>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="xCount">X-Count</label>' +
+                    '<input type="number" id="xCount" min="1" max="200" step="1" value="' + settings.xCount + '" required>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="xDistance">X-Distance (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="xDistance" min="0.1" step="0.1" value="' + settings.xDistance + '" required>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="yCount">Y-Count</label>' +
+                    '<input type="number" id="yCount" min="1" max="200" step="1" value="' + settings.yCount + '" required>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="yDistance">Y-Distance (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="yDistance" min="0.1" step="0.1" value="' + settings.yDistance + '" required>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="depth">Depth (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="depth" min="0.1" step="0.1" value="' + settings.depth + '" required>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="pitch">Pitch (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="pitch" min="0.1" max="10" step="0.1" value="' + settings.pitch + '" required>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="form-card">' +
+                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<input type="number" id="bitDiameter" min="0.1" step="0.01" value="' + settings.toolDiameter + '" required>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="feedRate">Feed Rate</label>' +
+                    '<input type="number" id="feedRate" min="1" step="1" value="' + settings.feedRate + '" required>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="spindleRPM">Spindle RPM</label>' +
+                    '<input type="number" id="spindleRPM" min="1" max="24000" step="100" value="' + settings.spindleRPM + '" required>' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="spindleDelay">Spindle Delay</label>' +
+                    '<input type="number" id="spindleDelay" min="0" max="30" step="1" value="' + settings.spindleDelay + '" required>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Mist Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="mistM7"' + (settings.mistM7 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row coolant-row">' +
+                  '<div class="coolant-label">Flood Coolant</div>' +
+                  '<div class="coolant-control">' +
+                    '<label class="toggle-switch">' +
+                      '<input type="checkbox" id="floodM8"' + (settings.floodM8 ? ' checked' : '') + '>' +
+                      '<span class="toggle-slider"></span>' +
+                    '</label>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+        '<div class="plugin-dialog-footer">' +
+          '<div class="button-group">' +
+            '<button type="button" class="btn btn-secondary" id="btnClose">Close</button>' +
+            '<button type="button" class="btn btn-primary" id="btnGenerate">Generate</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    root.innerHTML = html;
+
+    document.getElementById('btnClose').addEventListener('click', function() {
+      window.postMessage({ type: 'close-plugin-dialog' }, '*');
+    });
+    document.getElementById('btnGenerate').addEventListener('click', function() {
+      document.getElementById('boringForm').requestSubmit();
+    });
+
+    initBoringLogic(isImperial);
+  }
+
+  function initBoringLogic(isImperial) {
+    var validationRules = isImperial ? {
+      xCount: { min: 1, max: 200, label: 'X-Count', integer: true },
+      yCount: { min: 1, max: 200, label: 'Y-Count', integer: true },
+      xDistance: { min: 0.004, max: Infinity, label: 'X-Distance' },
+      yDistance: { min: 0.004, max: Infinity, label: 'Y-Distance' },
+      diameter: { min: 0.004, max: Infinity, label: 'Diameter' },
+      depth: { min: 0.004, max: Infinity, label: 'Depth' },
+      bitDiameter: { min: 0.004, max: Infinity, label: 'Bit Diameter' },
+      pitch: { min: 0.1, max: 10, label: 'Pitch' },
+      feedRate: { min: 1, max: Infinity, label: 'Feed Rate' },
+      spindleRPM: { min: 1, max: 24000, label: 'Spindle RPM', integer: true },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    } : {
+      xCount: { min: 1, max: 200, label: 'X-Count', integer: true },
+      yCount: { min: 1, max: 200, label: 'Y-Count', integer: true },
+      xDistance: { min: 0.1, max: Infinity, label: 'X-Distance' },
+      yDistance: { min: 0.1, max: Infinity, label: 'Y-Distance' },
+      diameter: { min: 0.1, max: Infinity, label: 'Diameter' },
+      depth: { min: 0.1, max: Infinity, label: 'Depth' },
+      bitDiameter: { min: 0.1, max: Infinity, label: 'Bit Diameter' },
+      pitch: { min: 0.1, max: 10, label: 'Pitch' },
+      feedRate: { min: 1, max: Infinity, label: 'Feed Rate' },
+      spindleRPM: { min: 1, max: 24000, label: 'Spindle RPM', integer: true },
+      spindleDelay: { min: 0, max: 30, label: 'Spindle Delay', integer: true }
+    };
+
+    var customValidator = function(id, num) {
+      if (id === 'xDistance' || id === 'yDistance') {
+        var diameterInput = document.getElementById('diameter');
+        if (diameterInput) {
+          var diameter = parseFloat(diameterInput.value);
+          if (!isNaN(diameter) && num < diameter) {
+            return validationRules[id].label + ' must be at least the Diameter (' + diameter + ')';
+          }
+        }
+      }
+      if (id === 'diameter') {
+        var bitDiameterInput = document.getElementById('bitDiameter');
+        if (bitDiameterInput) {
+          var bitDiameter = parseFloat(bitDiameterInput.value);
+          if (!isNaN(bitDiameter) && num < bitDiameter) {
+            return validationRules[id].label + ' must be at least the Bit Diameter (' + bitDiameter + ')';
+          }
+        }
+      }
+      return null;
+    };
+
+    var ttObj = createTooltip(true);
+    var showTooltip = makeShowTooltip(ttObj.tooltip, ttObj.arrow);
+    var hideTooltip = makeHideTooltip(ttObj.tooltip);
+    var validateInput = makeValidateInput(validationRules, customValidator);
+    var validateAllInputs = makeValidateAllInputs(validationRules, validateInput, showTooltip);
+    attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip);
+
+    // When diameter changes, re-validate xDistance and yDistance
+    var diameterInput = document.getElementById('diameter');
+    if (diameterInput) {
+      diameterInput.addEventListener('input', function() {
+        var xDistanceInput = document.getElementById('xDistance');
+        var yDistanceInput = document.getElementById('yDistance');
+        if (xDistanceInput) {
+          xDistanceInput.style.borderColor = '';
+        }
+        if (yDistanceInput) {
+          yDistanceInput.style.borderColor = '';
+        }
+        hideTooltip();
+      });
+    }
+
+    // When bitDiameter changes, clear diameter validation error
+    var bitDiameterInput = document.getElementById('bitDiameter');
+    if (bitDiameterInput) {
+      bitDiameterInput.addEventListener('input', function() {
+        if (diameterInput) {
+          diameterInput.style.borderColor = '';
+        }
+        hideTooltip();
+      });
+    }
+
+    // Handle cut type toggle
+    var cutTypeToggle = document.getElementById('cutType');
+    var innerLabel = document.getElementById('innerLabel');
+    var outerLabel = document.getElementById('outerLabel');
+
+    function updateCutTypeLabels() {
+      if (cutTypeToggle.checked) {
+        innerLabel.classList.remove('active');
+        outerLabel.classList.add('active');
+      } else {
+        innerLabel.classList.add('active');
+        outerLabel.classList.remove('active');
+      }
+    }
+
+    cutTypeToggle.addEventListener('change', updateCutTypeLabels);
+
+    // Handle X-Count and Y-Count changes to enable/disable distance inputs
+    var xCountInput = document.getElementById('xCount');
+    var xDistanceInput = document.getElementById('xDistance');
+    var yCountInput = document.getElementById('yCount');
+    var yDistanceInput = document.getElementById('yDistance');
+
+    function updateDistanceInputs() {
+      var xCount = parseInt(xCountInput.value);
+      var yCount = parseInt(yCountInput.value);
+      var diameter = parseFloat(diameterInput.value);
+
+      xDistanceInput.disabled = xCount <= 1;
+      yDistanceInput.disabled = yCount <= 1;
+
+      if (xCount > 1 && !isNaN(diameter)) {
+        var xDistance = parseFloat(xDistanceInput.value);
+        if (isNaN(xDistance) || xDistance < diameter) {
+          xDistanceInput.value = diameter;
+        }
+      }
+
+      if (yCount > 1 && !isNaN(diameter)) {
+        var yDistance = parseFloat(yDistanceInput.value);
+        if (isNaN(yDistance) || yDistance < diameter) {
+          yDistanceInput.value = diameter;
+        }
+      }
+    }
+
+    xCountInput.addEventListener('input', updateDistanceInputs);
+    yCountInput.addEventListener('input', updateDistanceInputs);
+    diameterInput.addEventListener('input', updateDistanceInputs);
+
+    // Initialize on load
+    updateDistanceInputs();
+
+    function generateBoringGcode(params) {
+      var xCount = params.xCount, xDistance = params.xDistance;
+      var yCount = params.yCount, yDistance = params.yDistance;
+      var diameter = params.diameter, depth = params.depth;
+      var cutType = params.cutType, bitDiameter = params.bitDiameter;
+      var pitch = params.pitch;
+      var feedRate = params.feedRate, plungeFeedRate = params.plungeFeedRate;
+      var spindleRPM = params.spindleRPM, spindleDelay = params.spindleDelay;
+      var mistM7 = params.mistM7, floodM8 = params.floodM8;
+
+      var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
+      var unitsCode = isImperial ? 'G20' : 'G21';
+      var unitsLabel = isImperial ? 'inch' : 'mm';
+
+      var holeRadius = diameter / 2;
+      var toolRadius = bitDiameter / 2;
+      var pathRadius;
+
+      if (cutType === 'inner') {
+        pathRadius = holeRadius - toolRadius;
+      } else {
+        pathRadius = holeRadius + toolRadius;
+      }
+
+      var zIncrement = pitch;
+
+      var gcode = [];
+      gcode.push('(Boring Operation)');
+      gcode.push('(Pattern: ' + xCount + ' x ' + yCount + ' holes)');
+      gcode.push('(Hole Diameter: ' + diameter + unitsLabel + ', Depth: ' + depth + unitsLabel + ')');
+      gcode.push('(Cut Type: ' + cutType + ')');
+      gcode.push('(Bit Diameter: ' + bitDiameter + unitsLabel + ')');
+      gcode.push('(Pitch: ' + pitch + unitsLabel + ' per revolution)');
+      gcode.push('(X-Distance: ' + xDistance + unitsLabel + ', Y-Distance: ' + yDistance + unitsLabel + ')');
+      gcode.push('');
+      gcode.push(unitsCode + ' ; ' + (isImperial ? 'Imperial' : 'Metric') + ' units');
+      gcode.push('G17 ; XY plane selection');
+      gcode.push('G90 ; Absolute positioning');
+      gcode.push('G94 ; Feed rate per minute');
+      gcode.push('');
+      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      gcode.push('');
+
+      var holeNumber = 0;
+      for (var yi = 0; yi < yCount; yi++) {
+        for (var xi = 0; xi < xCount; xi++) {
+          holeNumber++;
+          var holeX = xi * xDistance;
+          var holeY = yi * yDistance;
+
+          gcode.push('(Hole ' + holeNumber + '/' + (xCount * yCount) + ' at X' + holeX.toFixed(3) + ' Y' + holeY.toFixed(3) + ')');
+
+          if (holeNumber === 1) {
+            if (mistM7) {
+              gcode.push('M7 ; Mist coolant on');
+            }
+            if (floodM8) {
+              gcode.push('M8 ; Flood coolant on');
+            }
+            if (spindleRPM > 0) {
+              gcode.push('M3 S' + spindleRPM + ' ; Start spindle');
+              if (spindleDelay > 0) {
+                gcode.push('G4 P' + spindleDelay + ' ; Wait ' + spindleDelay + ' seconds');
+              }
+            }
+          }
+
+          var minEntryOffset = isImperial ? 0.005 : 0.1;
+          var entryOffsetCandidate = Math.max(pathRadius * 0.0125, toolRadius * 0.25, minEntryOffset);
+          var entryOffset = Math.min(pathRadius * 0.05, entryOffsetCandidate, pathRadius * 0.5);
+          var approachStartOffset = Math.max(entryOffset, Math.min(pathRadius * 0.8, entryOffset * 2.5));
+          var startX = holeX + pathRadius - approachStartOffset;
+          var arcStartX = holeX + pathRadius - entryOffset;
+          var startY = holeY - entryOffset;
+          var rampXTravel = Math.max(arcStartX - startX, 0);
+
+          gcode.push('G0 X' + startX.toFixed(3) + ' Y' + startY.toFixed(3));
+          gcode.push('G0 Z' + safeHeight);
+
+          var slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
+          gcode.push('G0 Z' + slowPlungeStart.toFixed(3));
+
+          var startDepth = Math.min(depth, zIncrement * 0.5);
+          var rampTargetDepth = Math.min(depth, zIncrement);
+          var rampDepthDiff = Math.max(0, rampTargetDepth - startDepth);
+          gcode.push('G1 Z' + (-startDepth).toFixed(3) + ' F' + plungeFeedRate);
+
+          var leadInSteps = 7;
+          for (var step = 1; step <= leadInSteps; step++) {
+            var progress = step / leadInSteps;
+            var xPos = startX + (rampXTravel * progress);
+            var zPos = -(startDepth + (rampDepthDiff * progress));
+            gcode.push('X' + xPos.toFixed(3) + ' Z' + zPos.toFixed(3));
+          }
+
+          var arcCenterYOffset = entryOffset;
+          gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I0 J' + arcCenterYOffset.toFixed(3) + ' F' + feedRate);
+
+          var currentDepth = rampTargetDepth;
+          var depthTolerance = 1e-6;
+          var zIncrementPerSemicircle = zIncrement / 2;
+          var atPlusX = true;
+
+          while (currentDepth < depth - depthTolerance) {
+            var firstHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
+            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 Z' + (-firstHalfDepth).toFixed(3) + ' F' + feedRate);
+            currentDepth = firstHalfDepth;
+            atPlusX = false;
+
+            if (currentDepth >= depth - depthTolerance) break;
+
+            var secondHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
+            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 Z' + (-secondHalfDepth).toFixed(3) + ' F' + feedRate);
+            currentDepth = secondHalfDepth;
+            atPlusX = true;
+          }
+
+          if (atPlusX) {
+            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
+            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+          } else {
+            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
+          }
+
+          gcode.push('G0 Z' + safeHeight);
+          gcode.push('');
+        }
+      }
+
+      gcode.push('G53 G0 Z0 ; Return to machine Z0');
+      if (mistM7 || floodM8) {
+        gcode.push('M9 ; Coolant off');
+      }
+      if (spindleRPM > 0) {
+        gcode.push('M5 ; Stop spindle');
+      }
+      gcode.push('M30 ; Program end');
+
+      return gcode.join('\n');
+    }
+
+    document.getElementById('boringForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      if (!validateAllInputs()) {
+        return;
+      }
+
+      var xCount = parseInt(document.getElementById('xCount').value);
+      var xDistance = parseFloat(document.getElementById('xDistance').value);
+      var yCount = parseInt(document.getElementById('yCount').value);
+      var yDistance = parseFloat(document.getElementById('yDistance').value);
+      var diameter = parseFloat(document.getElementById('diameter').value);
+      var depth = parseFloat(document.getElementById('depth').value);
+      var cutType = cutTypeToggle.checked ? 'outer' : 'inner';
+      var bitDiameter = parseFloat(document.getElementById('bitDiameter').value);
+      var pitch = parseFloat(document.getElementById('pitch').value);
+      var feedRate = parseFloat(document.getElementById('feedRate').value);
+      var spindleRPM = parseInt(document.getElementById('spindleRPM').value);
+      var spindleDelay = parseInt(document.getElementById('spindleDelay').value);
+      var mistM7 = document.getElementById('mistM7').checked;
+      var floodM8 = document.getElementById('floodM8').checked;
+
+      var displayValues = {
+        xCount: xCount,
+        xDistance: xDistance,
+        yCount: yCount,
+        yDistance: yDistance,
+        diameter: diameter,
+        depth: depth,
+        cutType: cutType,
+        bitDiameter: bitDiameter,
+        pitch: pitch,
+        feedRate: feedRate,
+        spindleRPM: spindleRPM,
+        spindleDelay: spindleDelay,
+        mistM7: mistM7,
+        floodM8: floodM8
+      };
+
+      var response = await fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings');
+      var savedSettings = response.ok ? await response.json() : {};
+      var convertToDisplayFn = function(value) { return isImperial ? parseFloat((value * 0.0393701).toFixed(4)) : value; };
+      var currentPlungeFeedRate = convertToDisplayFn(savedSettings.boring != null && savedSettings.boring.plungeFeedRate != null ? savedSettings.boring.plungeFeedRate : 200);
+
+      var convertToMetric = function(value) { return isImperial ? value * 25.4 : value; };
+
+      var settingsToSave = {
+        boring: {
+          xCount: displayValues.xCount,
+          xDistance: convertToMetric(displayValues.xDistance),
+          yCount: displayValues.yCount,
+          yDistance: convertToMetric(displayValues.yDistance),
+          diameter: convertToMetric(displayValues.diameter),
+          depth: convertToMetric(displayValues.depth),
+          cutType: displayValues.cutType,
+          toolDiameter: convertToMetric(displayValues.bitDiameter),
+          pitch: convertToMetric(displayValues.pitch),
+          feedRate: convertToMetric(displayValues.feedRate),
+          plungeFeedRate: convertToMetric(currentPlungeFeedRate),
+          spindleRPM: displayValues.spindleRPM,
+          spindleDelay: displayValues.spindleDelay,
+          mistM7: displayValues.mistM7,
+          floodM8: displayValues.floodM8
+        }
+      };
+
+      var gcodeParams = {
+        xCount: displayValues.xCount,
+        xDistance: displayValues.xDistance,
+        yCount: displayValues.yCount,
+        yDistance: displayValues.yDistance,
+        diameter: displayValues.diameter,
+        depth: displayValues.depth,
+        cutType: displayValues.cutType,
+        bitDiameter: displayValues.bitDiameter,
+        pitch: displayValues.pitch,
+        feedRate: displayValues.feedRate,
+        plungeFeedRate: currentPlungeFeedRate,
+        spindleRPM: displayValues.spindleRPM,
+        spindleDelay: displayValues.spindleDelay,
+        mistM7: displayValues.mistM7,
+        floodM8: displayValues.floodM8,
+        isImperial: isImperial
+      };
+
+      var gcode = generateBoringGcode(gcodeParams);
+
+      fetch(BASE_URL + '/api/plugins/com.ncsender.toolbench/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsToSave)
+      }).catch(function(err) { console.error('Failed to save settings:', err); });
+
+      try {
+        var uploadResponse = await fetch(BASE_URL + '/api/gcode-files/load-temp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: 'Boring.nc', content: gcode })
+        });
+
+        if (uploadResponse.ok) {
+          window.postMessage({ type: 'close-plugin-dialog' }, '*');
+        } else {
+          alert('Failed to upload G-code file');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Error uploading G-code file');
+      }
+    });
+  }
+
+  init();
+})();
+</script>

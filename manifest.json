@@ -1,14 +1,25 @@
 {
   "id": "com.ncsender.toolbench",
   "name": "ToolBench",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "minAppVersion": "0.3.19",
   "author": "ncSender",
   "description": "Collection of CNC tooling utilities including surfacing, jointer/cutter, and boring operations",
   "entry": "index.js",
+  "configUi": "config.html",
   "icon": "icon.svg",
   "category": "gcode-generator",
   "repository": "https://github.com/siganberg/ncsender-plugin-toolbench",
+  "platforms": {
+    "v1": "0.3.19",
+    "pro-v1": "0.3.19",
+    "pro-v2": "2.0.0"
+  },
   "events": [],
-  "permissions": ["gcode.modify"]
+  "permissions": ["gcode.modify"],
+  "toolMenu": [
+    { "id": "planer", "label": "Planer", "icon": "planer.png", "clientOnly": true },
+    { "id": "jointer", "label": "Jointer/Cutter", "icon": "jointer.png", "clientOnly": true },
+    { "id": "boring", "label": "Boring", "icon": "boring.png", "clientOnly": true }
+  ]
 }
