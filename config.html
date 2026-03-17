@@ -579,10 +579,9 @@
   .boring-layout {
     display: flex;
     flex-direction: column;
-    height: 100%;
     max-width: 800px;
     margin: 0 auto;
-    overflow-x: hidden;
+    max-height: calc(85vh - 80px);
   }
   .boring-layout .boring-content {
     flex: 1;
@@ -590,6 +589,7 @@
     overflow-x: hidden;
     padding: 24px;
     box-sizing: border-box;
+    min-height: 0;
   }
   .boring-layout .form-cards-container {
     display: grid;
@@ -779,6 +779,62 @@
     border-bottom: 1px solid var(--color-border);
     text-align: center;
   }
+  .boring-layout .shape-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    text-align: center;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+  .boring-layout .origin-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .boring-layout .origin-picker label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+  }
+  .boring-layout .origin-grid {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+  }
+  .boring-layout .origin-point {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-text-secondary, #888);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: all 0.15s ease;
+  }
+  .boring-layout .origin-point:hover {
+    background: var(--color-accent, var(--color-primary));
+  }
+  .boring-layout .origin-point.active {
+    background: var(--color-accent, var(--color-primary));
+  }
+  .boring-layout .origin-point[data-origin="top-left"] { top: 0; left: 0; }
+  .boring-layout .origin-point[data-origin="top-right"] { top: 0; left: 100%; }
+  .boring-layout .origin-point[data-origin="bottom-left"] { top: 100%; left: 0; }
+  .boring-layout .origin-point[data-origin="bottom-right"] { top: 100%; left: 100%; }
+  .boring-layout .origin-point[data-origin="center"] { top: 50%; left: 50%; }
+  .boring-layout .rect-fields { display: none; }
+  .boring-layout .rect-fields.visible { display: block; }
+  .boring-layout .round-fields.hidden { display: none; }
   @media (max-width: 600px) {
     .boring-layout .form-row {
       grid-template-columns: 1fr;
@@ -1916,11 +1972,15 @@
     var savedBoringSettings = (initialConfig && initialConfig.boring) || {};
 
     var settings = {
+      shape: savedBoringSettings.shape != null ? savedBoringSettings.shape : 'round',
+      origin: savedBoringSettings.origin != null ? savedBoringSettings.origin : 'center',
       xCount: savedBoringSettings.xCount != null ? savedBoringSettings.xCount : 1,
       xDistance: convertToDisplay(savedBoringSettings.xDistance != null ? savedBoringSettings.xDistance : 50),
       yCount: savedBoringSettings.yCount != null ? savedBoringSettings.yCount : 1,
       yDistance: convertToDisplay(savedBoringSettings.yDistance != null ? savedBoringSettings.yDistance : 50),
       diameter: convertToDisplay(savedBoringSettings.diameter != null ? savedBoringSettings.diameter : 10),
+      width: convertToDisplay(savedBoringSettings.width != null ? savedBoringSettings.width : 20),
+      height: convertToDisplay(savedBoringSettings.height != null ? savedBoringSettings.height : 20),
       depth: convertToDisplay(savedBoringSettings.depth != null ? savedBoringSettings.depth : 5),
       cutType: savedBoringSettings.cutType != null ? savedBoringSettings.cutType : 'inner',
       toolDiameter: convertToDisplay(savedBoringSettings.toolDiameter != null ? savedBoringSettings.toolDiameter : 3.17),
@@ -1943,6 +2003,26 @@
                 '<div class="form-card-title">Dimensions</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
+                    '<label for="shape">Shape</label>' +
+                    '<select id="shape" class="shape-select">' +
+                      '<option value="round"' + (settings.shape === 'round' ? ' selected' : '') + '>Round</option>' +
+                      '<option value="rectangle"' + (settings.shape === 'rectangle' ? ' selected' : '') + '>Rectangle</option>' +
+                    '</select>' +
+                  '</div>' +
+                  '<div class="origin-picker">' +
+                    '<label>Origin</label>' +
+                    '<div class="origin-grid">' +
+                      '<input type="hidden" id="origin" value="' + settings.origin + '">' +
+                      '<div class="origin-point ' + (settings.origin === 'top-left' ? 'active' : '') + '" data-origin="top-left"></div>' +
+                      '<div class="origin-point ' + (settings.origin === 'top-right' ? 'active' : '') + '" data-origin="top-right"></div>' +
+                      '<div class="origin-point ' + (settings.origin === 'center' ? 'active' : '') + '" data-origin="center"></div>' +
+                      '<div class="origin-point ' + (settings.origin === 'bottom-left' ? 'active' : '') + '" data-origin="bottom-left"></div>' +
+                      '<div class="origin-point ' + (settings.origin === 'bottom-right' ? 'active' : '') + '" data-origin="bottom-right"></div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
                     '<label class="cut-type-label">Cut</label>' +
                     '<div class="cut-type-toggle">' +
                       '<div class="cut-type-labels">' +
@@ -1957,9 +2037,19 @@
                       '</div>' +
                     '</div>' +
                   '</div>' +
-                  '<div class="form-group">' +
+                  '<div class="form-group round-fields ' + (settings.shape === 'rectangle' ? 'hidden' : '') + '">' +
                     '<label for="diameter">Diameter (' + distanceUnit + ')</label>' +
                     '<input type="number" id="diameter" min="0.1" step="0.1" value="' + settings.diameter + '" required>' +
+                  '</div>' +
+                  '<div class="rect-fields ' + (settings.shape === 'rectangle' ? 'visible' : '') + '">' +
+                    '<div class="form-group" style="margin-bottom: 16px;">' +
+                      '<label for="rectWidth">Width (' + distanceUnit + ')</label>' +
+                      '<input type="number" id="rectWidth" min="0.1" step="0.1" value="' + settings.width + '">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                      '<label for="rectHeight">Height (' + distanceUnit + ')</label>' +
+                      '<input type="number" id="rectHeight" min="0.1" step="0.1" value="' + settings.height + '">' +
+                    '</div>' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
@@ -2064,6 +2154,8 @@
       xDistance: { min: 0.004, max: Infinity, label: 'X-Distance' },
       yDistance: { min: 0.004, max: Infinity, label: 'Y-Distance' },
       diameter: { min: 0.004, max: Infinity, label: 'Diameter' },
+      rectWidth: { min: 0.004, max: Infinity, label: 'Width' },
+      rectHeight: { min: 0.004, max: Infinity, label: 'Height' },
       depth: { min: 0.004, max: Infinity, label: 'Depth' },
       bitDiameter: { min: 0.004, max: Infinity, label: 'Bit Diameter' },
       pitch: { min: 0.1, max: 10, label: 'Pitch' },
@@ -2076,6 +2168,8 @@
       xDistance: { min: 0.1, max: Infinity, label: 'X-Distance' },
       yDistance: { min: 0.1, max: Infinity, label: 'Y-Distance' },
       diameter: { min: 0.1, max: Infinity, label: 'Diameter' },
+      rectWidth: { min: 0.1, max: Infinity, label: 'Width' },
+      rectHeight: { min: 0.1, max: Infinity, label: 'Height' },
       depth: { min: 0.1, max: Infinity, label: 'Depth' },
       bitDiameter: { min: 0.1, max: Infinity, label: 'Bit Diameter' },
       pitch: { min: 0.1, max: 10, label: 'Pitch' },
@@ -2110,8 +2204,70 @@
     var showTooltip = makeShowTooltip(ttObj.tooltip, ttObj.arrow);
     var hideTooltip = makeHideTooltip(ttObj.tooltip);
     var validateInput = makeValidateInput(validationRules, customValidator);
-    var validateAllInputs = makeValidateAllInputs(validationRules, validateInput, showTooltip);
+    var _baseValidateAll = makeValidateAllInputs(validationRules, validateInput, showTooltip);
+    // Override to skip fields not relevant to current shape
+    var validateAllInputs = function() {
+      var shapeVal = document.getElementById('shape') ? document.getElementById('shape').value : 'round';
+      for (var id in validationRules) {
+        if (shapeVal === 'round' && (id === 'rectWidth' || id === 'rectHeight')) continue;
+        if (shapeVal === 'rectangle' && id === 'diameter') continue;
+        var element = document.getElementById(id);
+        if (!element) continue;
+        if (element.disabled) continue;
+        var error = validateInput(id, element.value);
+        if (error) {
+          showTooltip(element, error);
+          return false;
+        }
+      }
+      return true;
+    };
     attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip);
+
+    // Handle shape selector
+    var shapeSelect = document.getElementById('shape');
+    var roundFields = document.querySelectorAll('.round-fields');
+    var rectFields = document.querySelectorAll('.rect-fields');
+
+    function updateShapeFields() {
+      var isRect = shapeSelect.value === 'rectangle';
+      for (var i = 0; i < roundFields.length; i++) {
+        if (isRect) { roundFields[i].classList.add('hidden'); } else { roundFields[i].classList.remove('hidden'); }
+      }
+      for (var j = 0; j < rectFields.length; j++) {
+        if (isRect) { rectFields[j].classList.add('visible'); } else { rectFields[j].classList.remove('visible'); }
+      }
+      var diameterEl = document.getElementById('diameter');
+      var rectWidthEl = document.getElementById('rectWidth');
+      var rectHeightEl = document.getElementById('rectHeight');
+      if (isRect) {
+        diameterEl.removeAttribute('required');
+        rectWidthEl.setAttribute('required', '');
+        rectHeightEl.setAttribute('required', '');
+      } else {
+        diameterEl.setAttribute('required', '');
+        rectWidthEl.removeAttribute('required');
+        rectHeightEl.removeAttribute('required');
+      }
+    }
+
+    shapeSelect.addEventListener('change', updateShapeFields);
+    updateShapeFields();
+
+    // Handle origin picker
+    var originInput = document.getElementById('origin');
+    var originPoints = document.querySelectorAll('.origin-point');
+    for (var oi = 0; oi < originPoints.length; oi++) {
+      (function(point) {
+        point.addEventListener('click', function() {
+          for (var pi = 0; pi < originPoints.length; pi++) {
+            originPoints[pi].classList.remove('active');
+          }
+          point.classList.add('active');
+          originInput.value = point.getAttribute('data-origin');
+        });
+      })(originPoints[oi]);
+    }
 
     // When diameter changes, re-validate xDistance and yDistance
     var diameterInput = document.getElementById('diameter');
@@ -2194,9 +2350,12 @@
     updateDistanceInputs();
 
     function generateBoringGcode(params) {
+      var shape = params.shape || 'round';
       var xCount = params.xCount, xDistance = params.xDistance;
       var yCount = params.yCount, yDistance = params.yDistance;
       var diameter = params.diameter, depth = params.depth;
+      var rectWidth = params.rectWidth, rectHeight = params.rectHeight;
+      var origin = params.origin || 'center';
       var cutType = params.cutType, bitDiameter = params.bitDiameter;
       var pitch = params.pitch;
       var feedRate = params.feedRate, plungeFeedRate = params.plungeFeedRate;
@@ -2206,26 +2365,47 @@
       var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
       var unitsCode = isImperial ? 'G20' : 'G21';
       var unitsLabel = isImperial ? 'inch' : 'mm';
-
-      var holeRadius = diameter / 2;
       var toolRadius = bitDiameter / 2;
-      var pathRadius;
-
-      if (cutType === 'inner') {
-        pathRadius = holeRadius - toolRadius;
-      } else {
-        pathRadius = holeRadius + toolRadius;
-      }
-
       var zIncrement = pitch;
 
+      // Determine the shape size for origin offset calculation
+      var shapeW = shape === 'rectangle' ? rectWidth : diameter;
+      var shapeH = shape === 'rectangle' ? rectHeight : diameter;
+
+      // Calculate origin offset
+      var originOffsetX = 0;
+      var originOffsetY = 0;
+      if (origin === 'center') {
+        originOffsetX = -((xCount - 1) * xDistance) / 2;
+        originOffsetY = -((yCount - 1) * yDistance) / 2;
+      } else if (origin === 'top-left') {
+        originOffsetX = shapeW / 2;
+        originOffsetY = -((yCount - 1) * yDistance) - shapeH / 2;
+      } else if (origin === 'top-right') {
+        originOffsetX = -((xCount - 1) * xDistance) - shapeW / 2;
+        originOffsetY = -((yCount - 1) * yDistance) - shapeH / 2;
+      } else if (origin === 'bottom-left') {
+        originOffsetX = shapeW / 2;
+        originOffsetY = shapeH / 2;
+      } else if (origin === 'bottom-right') {
+        originOffsetX = -((xCount - 1) * xDistance) - shapeW / 2;
+        originOffsetY = shapeH / 2;
+      }
+
       var gcode = [];
-      gcode.push('(Boring Operation)');
-      gcode.push('(Pattern: ' + xCount + ' x ' + yCount + ' holes)');
-      gcode.push('(Hole Diameter: ' + diameter + unitsLabel + ', Depth: ' + depth + unitsLabel + ')');
+      if (shape === 'rectangle') {
+        gcode.push('(Rectangle Cut Operation)');
+        gcode.push('(Pattern: ' + xCount + ' x ' + yCount + ')');
+        gcode.push('(Size: ' + rectWidth + unitsLabel + ' x ' + rectHeight + unitsLabel + ', Depth: ' + depth + unitsLabel + ')');
+      } else {
+        gcode.push('(Boring Operation)');
+        gcode.push('(Pattern: ' + xCount + ' x ' + yCount + ' holes)');
+        gcode.push('(Hole Diameter: ' + diameter + unitsLabel + ', Depth: ' + depth + unitsLabel + ')');
+      }
       gcode.push('(Cut Type: ' + cutType + ')');
+      gcode.push('(Origin: ' + origin + ')');
       gcode.push('(Bit Diameter: ' + bitDiameter + unitsLabel + ')');
-      gcode.push('(Pitch: ' + pitch + unitsLabel + ' per revolution)');
+      gcode.push('(Pitch: ' + pitch + unitsLabel + ' per pass)');
       gcode.push('(X-Distance: ' + xDistance + unitsLabel + ', Y-Distance: ' + yDistance + unitsLabel + ')');
       gcode.push('');
       gcode.push(unitsCode + ' ; ' + (isImperial ? 'Imperial' : 'Metric') + ' units');
@@ -2236,22 +2416,17 @@
       gcode.push('G53 G0 Z0 ; Move to machine Z0');
       gcode.push('');
 
-      var holeNumber = 0;
+      var itemNumber = 0;
       for (var yi = 0; yi < yCount; yi++) {
         for (var xi = 0; xi < xCount; xi++) {
-          holeNumber++;
-          var holeX = xi * xDistance;
-          var holeY = yi * yDistance;
+          itemNumber++;
+          var centerX = xi * xDistance + originOffsetX;
+          var centerY = yi * yDistance + originOffsetY;
 
-          gcode.push('(Hole ' + holeNumber + '/' + (xCount * yCount) + ' at X' + holeX.toFixed(3) + ' Y' + holeY.toFixed(3) + ')');
-
-          if (holeNumber === 1) {
-            if (mistM7) {
-              gcode.push('M7 ; Mist coolant on');
-            }
-            if (floodM8) {
-              gcode.push('M8 ; Flood coolant on');
-            }
+          // Start coolant and spindle on first item
+          if (itemNumber === 1) {
+            if (mistM7) { gcode.push('M7 ; Mist coolant on'); }
+            if (floodM8) { gcode.push('M8 ; Flood coolant on'); }
             if (spindleRPM > 0) {
               gcode.push('M3 S' + spindleRPM + ' ; Start spindle');
               if (spindleDelay > 0) {
@@ -2260,66 +2435,166 @@
             }
           }
 
-          var minEntryOffset = isImperial ? 0.005 : 0.1;
-          var entryOffsetCandidate = Math.max(pathRadius * 0.0125, toolRadius * 0.25, minEntryOffset);
-          var entryOffset = Math.min(pathRadius * 0.05, entryOffsetCandidate, pathRadius * 0.5);
-          var approachStartOffset = Math.max(entryOffset, Math.min(pathRadius * 0.8, entryOffset * 2.5));
-          var startX = holeX + pathRadius - approachStartOffset;
-          var arcStartX = holeX + pathRadius - entryOffset;
-          var startY = holeY - entryOffset;
-          var rampXTravel = Math.max(arcStartX - startX, 0);
+          if (shape === 'rectangle') {
+            // --- RECTANGLE CUT ---
+            // Calculate toolpath rectangle (tool center path)
+            var halfW = rectWidth / 2;
+            var halfH = rectHeight / 2;
+            var pathHalfW, pathHalfH;
+            if (cutType === 'inner') {
+              pathHalfW = halfW - toolRadius;
+              pathHalfH = halfH - toolRadius;
+            } else {
+              pathHalfW = halfW + toolRadius;
+              pathHalfH = halfH + toolRadius;
+            }
 
-          gcode.push('G0 X' + startX.toFixed(3) + ' Y' + startY.toFixed(3));
-          gcode.push('G0 Z' + safeHeight);
+            if (pathHalfW <= 0 || pathHalfH <= 0) {
+              gcode.push('(WARNING: Rectangle too small for tool diameter, skipping)');
+              continue;
+            }
 
-          var slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
-          gcode.push('G0 Z' + slowPlungeStart.toFixed(3));
+            // Rectangle corners (CCW from bottom-right)
+            var rx1 = centerX + pathHalfW;  // right
+            var rx0 = centerX - pathHalfW;  // left
+            var ry1 = centerY + pathHalfH;  // top
+            var ry0 = centerY - pathHalfH;  // bottom
 
-          var startDepth = Math.min(depth, zIncrement * 0.5);
-          var rampTargetDepth = Math.min(depth, zIncrement);
-          var rampDepthDiff = Math.max(0, rampTargetDepth - startDepth);
-          gcode.push('G1 Z' + (-startDepth).toFixed(3) + ' F' + plungeFeedRate);
+            gcode.push('(Rectangle ' + itemNumber + '/' + (xCount * yCount) + ' center X' + centerX.toFixed(3) + ' Y' + centerY.toFixed(3) + ')');
 
-          var leadInSteps = 7;
-          for (var step = 1; step <= leadInSteps; step++) {
-            var progress = step / leadInSteps;
-            var xPos = startX + (rampXTravel * progress);
-            var zPos = -(startDepth + (rampDepthDiff * progress));
-            gcode.push('X' + xPos.toFixed(3) + ' Z' + zPos.toFixed(3));
-          }
+            // Perimeter length for distributing Z descent
+            var perimeterLength = 2 * (pathHalfW * 2 + pathHalfH * 2);
 
-          var arcCenterYOffset = entryOffset;
-          gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I0 J' + arcCenterYOffset.toFixed(3) + ' F' + feedRate);
+            // Rapid to start position: mid-point of bottom edge
+            var startX = centerX;
+            var startY = ry0;
+            gcode.push('G0 X' + startX.toFixed(3) + ' Y' + startY.toFixed(3));
+            gcode.push('G0 Z' + safeHeight);
 
-          var currentDepth = rampTargetDepth;
-          var depthTolerance = 1e-6;
-          var zIncrementPerSemicircle = zIncrement / 2;
-          var atPlusX = true;
+            var slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
+            gcode.push('G0 Z' + slowPlungeStart.toFixed(3));
 
-          while (currentDepth < depth - depthTolerance) {
-            var firstHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
-            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 Z' + (-firstHalfDepth).toFixed(3) + ' F' + feedRate);
-            currentDepth = firstHalfDepth;
-            atPlusX = false;
+            // Plunge to first depth
+            var firstDepth = Math.min(depth, zIncrement);
+            gcode.push('G1 Z' + (-firstDepth).toFixed(3) + ' F' + plungeFeedRate);
 
-            if (currentDepth >= depth - depthTolerance) break;
+            // Ramp along bottom edge to bottom-right corner while reaching first depth
+            gcode.push('G1 X' + rx1.toFixed(3) + ' Y' + ry0.toFixed(3) + ' F' + feedRate);
 
-            var secondHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
-            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 Z' + (-secondHalfDepth).toFixed(3) + ' F' + feedRate);
-            currentDepth = secondHalfDepth;
-            atPlusX = true;
-          }
+            var currentDepth = firstDepth;
+            var depthTolerance = 1e-6;
 
-          if (atPlusX) {
-            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
-            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+            // Cut perimeter laps, stepping down each lap
+            // Each lap: BR -> TR -> TL -> BL -> BR (CCW)
+            // Distribute Z descent evenly across the 4 sides
+            while (currentDepth < depth - depthTolerance) {
+              var nextDepth = Math.min(depth, currentDepth + zIncrement);
+              var zPerSide = (nextDepth - currentDepth) / 4;
+
+              // Bottom-right to top-right (right side, going up Y)
+              var z1 = -(currentDepth + zPerSide);
+              gcode.push('G1 X' + rx1.toFixed(3) + ' Y' + ry1.toFixed(3) + ' Z' + z1.toFixed(3));
+
+              // Top-right to top-left (top side, going left)
+              var z2 = -(currentDepth + zPerSide * 2);
+              gcode.push('G1 X' + rx0.toFixed(3) + ' Y' + ry1.toFixed(3) + ' Z' + z2.toFixed(3));
+
+              // Top-left to bottom-left (left side, going down Y)
+              var z3 = -(currentDepth + zPerSide * 3);
+              gcode.push('G1 X' + rx0.toFixed(3) + ' Y' + ry0.toFixed(3) + ' Z' + z3.toFixed(3));
+
+              // Bottom-left to bottom-right (bottom side, going right)
+              var z4 = -nextDepth;
+              gcode.push('G1 X' + rx1.toFixed(3) + ' Y' + ry0.toFixed(3) + ' Z' + z4.toFixed(3));
+
+              currentDepth = nextDepth;
+            }
+
+            // Final cleanup lap at full depth (no Z change)
+            gcode.push('G1 X' + rx1.toFixed(3) + ' Y' + ry1.toFixed(3) + ' F' + feedRate);
+            gcode.push('G1 X' + rx0.toFixed(3) + ' Y' + ry1.toFixed(3));
+            gcode.push('G1 X' + rx0.toFixed(3) + ' Y' + ry0.toFixed(3));
+            gcode.push('G1 X' + rx1.toFixed(3) + ' Y' + ry0.toFixed(3));
+
+            // Retract
+            gcode.push('G0 Z' + safeHeight);
+            gcode.push('');
+
           } else {
-            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
-            gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
-          }
+            // --- ROUND CUT ---
+            var holeX = centerX;
+            var holeY = centerY;
+            var holeRadius = diameter / 2;
+            var pathRadius;
+            if (cutType === 'inner') {
+              pathRadius = holeRadius - toolRadius;
+            } else {
+              pathRadius = holeRadius + toolRadius;
+            }
 
-          gcode.push('G0 Z' + safeHeight);
-          gcode.push('');
+            gcode.push('(Hole ' + itemNumber + '/' + (xCount * yCount) + ' at X' + holeX.toFixed(3) + ' Y' + holeY.toFixed(3) + ')');
+
+            var minEntryOffset = isImperial ? 0.005 : 0.1;
+            var entryOffsetCandidate = Math.max(pathRadius * 0.0125, toolRadius * 0.25, minEntryOffset);
+            var entryOffset = Math.min(pathRadius * 0.05, entryOffsetCandidate, pathRadius * 0.5);
+            var approachStartOffset = Math.max(entryOffset, Math.min(pathRadius * 0.8, entryOffset * 2.5));
+            var rStartX = holeX + pathRadius - approachStartOffset;
+            var arcStartX = holeX + pathRadius - entryOffset;
+            var rStartY = holeY - entryOffset;
+            var rampXTravel = Math.max(arcStartX - rStartX, 0);
+
+            gcode.push('G0 X' + rStartX.toFixed(3) + ' Y' + rStartY.toFixed(3));
+            gcode.push('G0 Z' + safeHeight);
+
+            var slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
+            gcode.push('G0 Z' + slowPlungeStart.toFixed(3));
+
+            var startDepth = Math.min(depth, zIncrement * 0.5);
+            var rampTargetDepth = Math.min(depth, zIncrement);
+            var rampDepthDiff = Math.max(0, rampTargetDepth - startDepth);
+            gcode.push('G1 Z' + (-startDepth).toFixed(3) + ' F' + plungeFeedRate);
+
+            var leadInSteps = 7;
+            for (var step = 1; step <= leadInSteps; step++) {
+              var progress = step / leadInSteps;
+              var xPos = rStartX + (rampXTravel * progress);
+              var zPos = -(startDepth + (rampDepthDiff * progress));
+              gcode.push('X' + xPos.toFixed(3) + ' Z' + zPos.toFixed(3));
+            }
+
+            var arcCenterYOffset = entryOffset;
+            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I0 J' + arcCenterYOffset.toFixed(3) + ' F' + feedRate);
+
+            var currentDepth = rampTargetDepth;
+            var depthTolerance = 1e-6;
+            var zIncrementPerSemicircle = zIncrement / 2;
+            var atPlusX = true;
+
+            while (currentDepth < depth - depthTolerance) {
+              var firstHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 Z' + (-firstHalfDepth).toFixed(3) + ' F' + feedRate);
+              currentDepth = firstHalfDepth;
+              atPlusX = false;
+
+              if (currentDepth >= depth - depthTolerance) break;
+
+              var secondHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 Z' + (-secondHalfDepth).toFixed(3) + ' F' + feedRate);
+              currentDepth = secondHalfDepth;
+              atPlusX = true;
+            }
+
+            if (atPlusX) {
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+            } else {
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
+            }
+
+            gcode.push('G0 Z' + safeHeight);
+            gcode.push('');
+          }
         }
       }
 
@@ -2342,11 +2617,15 @@
         return;
       }
 
+      var shape = document.getElementById('shape').value;
+      var origin = document.getElementById('origin').value;
       var xCount = parseInt(document.getElementById('xCount').value);
       var xDistance = parseFloat(document.getElementById('xDistance').value);
       var yCount = parseInt(document.getElementById('yCount').value);
       var yDistance = parseFloat(document.getElementById('yDistance').value);
       var diameter = parseFloat(document.getElementById('diameter').value);
+      var rectWidth = parseFloat(document.getElementById('rectWidth').value);
+      var rectHeight = parseFloat(document.getElementById('rectHeight').value);
       var depth = parseFloat(document.getElementById('depth').value);
       var cutType = cutTypeToggle.checked ? 'outer' : 'inner';
       var bitDiameter = parseFloat(document.getElementById('bitDiameter').value);
@@ -2358,11 +2637,15 @@
       var floodM8 = document.getElementById('floodM8').checked;
 
       var displayValues = {
+        shape: shape,
+        origin: origin,
         xCount: xCount,
         xDistance: xDistance,
         yCount: yCount,
         yDistance: yDistance,
         diameter: diameter,
+        rectWidth: rectWidth,
+        rectHeight: rectHeight,
         depth: depth,
         cutType: cutType,
         bitDiameter: bitDiameter,
@@ -2383,11 +2666,15 @@
 
       var settingsToSave = {
         boring: {
+          shape: displayValues.shape,
+          origin: displayValues.origin,
           xCount: displayValues.xCount,
           xDistance: convertToMetric(displayValues.xDistance),
           yCount: displayValues.yCount,
           yDistance: convertToMetric(displayValues.yDistance),
           diameter: convertToMetric(displayValues.diameter),
+          width: convertToMetric(displayValues.rectWidth),
+          height: convertToMetric(displayValues.rectHeight),
           depth: convertToMetric(displayValues.depth),
           cutType: displayValues.cutType,
           toolDiameter: convertToMetric(displayValues.bitDiameter),
@@ -2402,11 +2689,15 @@
       };
 
       var gcodeParams = {
+        shape: displayValues.shape,
+        origin: displayValues.origin,
         xCount: displayValues.xCount,
         xDistance: displayValues.xDistance,
         yCount: displayValues.yCount,
         yDistance: displayValues.yDistance,
         diameter: displayValues.diameter,
+        rectWidth: displayValues.rectWidth,
+        rectHeight: displayValues.rectHeight,
         depth: displayValues.depth,
         cutType: displayValues.cutType,
         bitDiameter: displayValues.bitDiameter,
