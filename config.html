@@ -791,18 +791,18 @@
     box-sizing: border-box;
     cursor: pointer;
   }
-  .boring-layout .origin-picker {
+  .origin-picker {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
   }
-  .boring-layout .origin-picker label {
+  .origin-picker label {
     font-weight: 500;
     color: var(--color-text-primary);
     font-size: 0.9rem;
   }
-  .boring-layout .origin-grid {
+  .origin-grid {
     position: relative;
     width: 58px;
     height: 58px;
@@ -810,7 +810,7 @@
     border-radius: 4px;
     background: var(--color-surface);
   }
-  .boring-layout .origin-point {
+  .origin-point {
     position: absolute;
     width: 14px;
     height: 14px;
@@ -821,17 +821,17 @@
     transform: translate(-50%, -50%);
     transition: all 0.15s ease;
   }
-  .boring-layout .origin-point:hover {
+  .origin-point:hover {
     background: var(--color-accent, var(--color-primary));
   }
-  .boring-layout .origin-point.active {
+  .origin-point.active {
     background: var(--color-accent, var(--color-primary));
   }
-  .boring-layout .origin-point[data-origin="top-left"] { top: 0; left: 0; }
-  .boring-layout .origin-point[data-origin="top-right"] { top: 0; left: 100%; }
-  .boring-layout .origin-point[data-origin="bottom-left"] { top: 100%; left: 0; }
-  .boring-layout .origin-point[data-origin="bottom-right"] { top: 100%; left: 100%; }
-  .boring-layout .origin-point[data-origin="center"] { top: 50%; left: 50%; }
+  .origin-point[data-origin="top-left"] { top: 0; left: 0; }
+  .origin-point[data-origin="top-right"] { top: 0; left: 100%; }
+  .origin-point[data-origin="bottom-left"] { top: 100%; left: 0; }
+  .origin-point[data-origin="bottom-right"] { top: 100%; left: 100%; }
+  .origin-point[data-origin="center"] { top: 50%; left: 50%; }
   .boring-layout .rect-fields { display: none; }
   .boring-layout .rect-fields.visible { display: block; }
   .boring-layout .round-fields.hidden { display: none; }
@@ -1025,7 +1025,7 @@
   // =========================================================================
   function renderPlaner(isImperial, distanceUnit, feedRateUnit) {
     var convertToDisplay = function(value) {
-      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : value;
+      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : parseFloat(value.toFixed(3));
     };
 
     var savedPlanerSettings = (initialConfig && initialConfig.planer) || {};
@@ -1044,6 +1044,7 @@
       spindleRpm: savedPlanerSettings.spindleRpm != null ? savedPlanerSettings.spindleRpm : 15000,
       spindleDelay: savedPlanerSettings.spindleDelay != null ? savedPlanerSettings.spindleDelay : 5,
       patternType: defaultPatternType,
+      origin: savedPlanerSettings.origin || 'bottom-left',
       mistM7: savedPlanerSettings.mistM7 != null ? savedPlanerSettings.mistM7 : false,
       floodM8: savedPlanerSettings.floodM8 != null ? savedPlanerSettings.floodM8 : false
     };
@@ -1056,13 +1057,26 @@
             '<div class="form-cards-container">' +
               '<div class="form-card">' +
                 '<div class="form-card-title">Dimensions</div>' +
-                '<div class="form-row orientation-row">' +
-                  '<label class="orientation-label" for="patternType">Direction</label>' +
-                  '<select id="patternType" class="orientation-select">' +
-                    '<option value="zigzagX"' + (settings.patternType === 'zigzagX' ? ' selected' : '') + '>Horizontal</option>' +
-                    '<option value="zigzagY"' + (settings.patternType === 'zigzagY' ? ' selected' : '') + '>Vertical</option>' +
-                    '<option value="spiral"' + (settings.patternType === 'spiral' ? ' selected' : '') + '>Spiral</option>' +
-                  '</select>' +
+                '<div class="form-row" style="align-items: flex-start;">' +
+                  '<div class="form-group">' +
+                    '<label for="patternType">Direction</label>' +
+                    '<select id="patternType">' +
+                      '<option value="zigzagX"' + (settings.patternType === 'zigzagX' ? ' selected' : '') + '>Horizontal</option>' +
+                      '<option value="zigzagY"' + (settings.patternType === 'zigzagY' ? ' selected' : '') + '>Vertical</option>' +
+                      '<option value="spiral"' + (settings.patternType === 'spiral' ? ' selected' : '') + '>Spiral</option>' +
+                    '</select>' +
+                  '</div>' +
+                  '<div class="origin-picker">' +
+                    '<label>Origin</label>' +
+                    '<div class="origin-grid">' +
+                      '<input type="hidden" id="planerOrigin" value="' + settings.origin + '">' +
+                      '<div class="origin-point planer-origin ' + (settings.origin === 'top-left' ? 'active' : '') + '" data-origin="top-left"></div>' +
+                      '<div class="origin-point planer-origin ' + (settings.origin === 'top-right' ? 'active' : '') + '" data-origin="top-right"></div>' +
+                      '<div class="origin-point planer-origin ' + (settings.origin === 'center' ? 'active' : '') + '" data-origin="center"></div>' +
+                      '<div class="origin-point planer-origin ' + (settings.origin === 'bottom-left' ? 'active' : '') + '" data-origin="bottom-left"></div>' +
+                      '<div class="origin-point planer-origin ' + (settings.origin === 'bottom-right' ? 'active' : '') + '" data-origin="bottom-right"></div>' +
+                    '</div>' +
+                  '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
@@ -1155,6 +1169,21 @@
     document.getElementById('btnGenerate').addEventListener('click', function() {
       document.getElementById('planerForm').requestSubmit();
     });
+
+    // Origin dot picker for planer
+    var planerOriginInput = document.getElementById('planerOrigin');
+    var planerOriginPoints = document.querySelectorAll('.planer-origin');
+    for (var poi = 0; poi < planerOriginPoints.length; poi++) {
+      (function(point) {
+        point.addEventListener('click', function() {
+          for (var pi = 0; pi < planerOriginPoints.length; pi++) {
+            planerOriginPoints[pi].classList.remove('active');
+          }
+          point.classList.add('active');
+          planerOriginInput.value = point.getAttribute('data-origin');
+        });
+      })(planerOriginPoints[poi]);
+    }
 
     initPlanerLogic(isImperial);
   }
@@ -1392,6 +1421,8 @@
       var patternTypeSelect = document.getElementById('patternType');
       var patternType = patternTypeSelect ? patternTypeSelect.value : 'zigzagY';
       var invertOrientation = patternType === 'zigzagX';
+      var originInput = document.getElementById('planerOrigin');
+      var origin = originInput ? originInput.value : 'bottom-left';
 
       var displayValues = {
         xDimension: parseFloat(document.getElementById('xDimension').value),
@@ -1428,15 +1459,27 @@
           spindleRpm: displayValues.spindleRpm,
           spindleDelay: displayValues.spindleDelay,
           patternType: patternType,
+          origin: origin,
           invertOrientation: invertOrientation,
           mistM7: displayValues.mistM7,
           floodM8: displayValues.floodM8
         }
       };
 
+      // Calculate start position based on origin selection
+      var xDim = displayValues.xDimension;
+      var yDim = displayValues.yDimension;
+      var startX = 0, startY = 0;
+      switch (origin) {
+        case 'bottom-right': startX = -xDim; break;
+        case 'top-left': startY = -yDim; break;
+        case 'top-right': startX = -xDim; startY = -yDim; break;
+        case 'center': startX = -xDim / 2; startY = -yDim / 2; break;
+      }
+
       var params = {
-        startX: 0,
-        startY: 0,
+        startX: startX,
+        startY: startY,
         xDimension: displayValues.xDimension,
         yDimension: displayValues.yDimension,
         depthOfCut: displayValues.depthOfCut,
@@ -1489,7 +1532,7 @@
   // =========================================================================
   function renderJointer(isImperial, distanceUnit, feedRateUnit) {
     var convertToDisplay = function(value) {
-      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : value;
+      return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : parseFloat(value.toFixed(3));
     };
 
     var savedJointerSettings = (initialConfig && initialConfig.jointer) || {};
