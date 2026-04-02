@@ -71,6 +71,19 @@
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-border);
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .planer-layout .unit-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--color-accent, #7c5cbf);
+    color: #fff;
+    letter-spacing: 0.5px;
   }
   .planer-layout .form-row {
     display: grid;
@@ -365,6 +378,19 @@
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-border);
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .jointer-layout .unit-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--color-accent, #7c5cbf);
+    color: #fff;
+    letter-spacing: 0.5px;
   }
   .jointer-layout .form-row {
     display: grid;
@@ -778,6 +804,19 @@
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-border);
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .boring-layout .unit-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--color-accent, #7c5cbf);
+    color: #fff;
+    letter-spacing: 0.5px;
   }
   .boring-layout .shape-select {
     width: 100%;
@@ -877,14 +916,15 @@
       var unitsPreference = appSettings.unitsPreference || 'metric';
       var isImperial = unitsPreference === 'imperial';
       var distanceUnit = isImperial ? 'in' : 'mm';
+      var unitLabel = isImperial ? 'Inches' : 'Metric';
       var feedRateUnit = isImperial ? 'in/min' : 'mm/min';
 
       if (TOOL_LABEL === 'Planer') {
-        renderPlaner(isImperial, distanceUnit, feedRateUnit);
+        renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel);
       } else if (TOOL_LABEL === 'Jointer/Cutter') {
-        renderJointer(isImperial, distanceUnit, feedRateUnit);
+        renderJointer(isImperial, distanceUnit, feedRateUnit, unitLabel);
       } else if (TOOL_LABEL === 'Boring') {
-        renderBoring(isImperial, distanceUnit, feedRateUnit);
+        renderBoring(isImperial, distanceUnit, feedRateUnit, unitLabel);
       } else {
         document.getElementById('toolbench-root').innerHTML =
           '<div style="padding: 30px; text-align: center; color: var(--color-text-secondary);">' +
@@ -1023,7 +1063,7 @@
   // =========================================================================
   // PLANER
   // =========================================================================
-  function renderPlaner(isImperial, distanceUnit, feedRateUnit) {
+  function renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel) {
     var convertToDisplay = function(value) {
       return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : parseFloat(value.toFixed(3));
     };
@@ -1034,8 +1074,11 @@
     var settings = {
       xDimension: convertToDisplay(savedPlanerSettings.xDimension != null ? savedPlanerSettings.xDimension : 100),
       yDimension: convertToDisplay(savedPlanerSettings.yDimension != null ? savedPlanerSettings.yDimension : 100),
+      depthMode: savedPlanerSettings.depthMode || 'depth',
       depthOfCut: convertToDisplay(savedPlanerSettings.depthOfCut != null ? savedPlanerSettings.depthOfCut : 0.5),
       targetDepth: convertToDisplay(savedPlanerSettings.targetDepth != null ? savedPlanerSettings.targetDepth : 0.5),
+      startingThickness: convertToDisplay(savedPlanerSettings.startingThickness != null ? savedPlanerSettings.startingThickness : 20),
+      targetThickness: convertToDisplay(savedPlanerSettings.targetThickness != null ? savedPlanerSettings.targetThickness : 18),
       bitDiameter: convertToDisplay(savedPlanerSettings.bitDiameter != null ? savedPlanerSettings.bitDiameter : 25.4),
       stepover: savedPlanerSettings.stepover != null ? savedPlanerSettings.stepover : 80,
       overrun: convertToDisplay(savedPlanerSettings.overrun != null ? savedPlanerSettings.overrun : 5),
@@ -1056,7 +1099,7 @@
           '<form id="planerForm" novalidate>' +
             '<div class="form-cards-container">' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-card-title">Dimensions <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row" style="align-items: flex-start;">' +
                   '<div class="form-group">' +
                     '<label for="patternType">Direction</label>' +
@@ -1080,22 +1123,41 @@
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="xDimension">X Dimension (' + distanceUnit + ')</label>' +
+                    '<label for="xDimension">X Dimension</label>' +
                     '<input type="number" id="xDimension" step="0.1" value="' + settings.xDimension + '">' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="yDimension">Y Dimension (' + distanceUnit + ')</label>' +
+                    '<label for="yDimension">Y Dimension</label>' +
                     '<input type="number" id="yDimension" step="0.1" value="' + settings.yDimension + '">' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="depthOfCut">Depth of Cut (' + distanceUnit + ')</label>' +
-                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
+                    '<label for="depthMode">Mode</label>' +
+                    '<select id="depthMode">' +
+                      '<option value="depth"' + (settings.depthMode === 'depth' ? ' selected' : '') + '>Target Depth</option>' +
+                      '<option value="thickness"' + (settings.depthMode === 'thickness' ? ' selected' : '') + '>Target Thickness</option>' +
+                    '</select>' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="targetDepth">Target Depth (' + distanceUnit + ')</label>' +
+                    '<label for="depthOfCut">Depth of Cut</label>' +
+                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row depth-field">' +
+                  '<div class="form-group" style="grid-column: 1 / -1;">' +
+                    '<label for="targetDepth">Target Depth</label>' +
                     '<input type="number" id="targetDepth" step="0.1" value="' + settings.targetDepth + '">' +
+                  '</div>' +
+                '</div>' +
+                '<div class="form-row thickness-field" style="display:none;">' +
+                  '<div class="form-group">' +
+                    '<label for="startingThickness">Starting Thickness</label>' +
+                    '<input type="number" id="startingThickness" step="0.1" value="' + settings.startingThickness + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
+                    '<label for="targetThickness">Target Thickness</label>' +
+                    '<input type="number" id="targetThickness" step="0.1" value="' + settings.targetThickness + '">' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
@@ -1104,16 +1166,16 @@
                     '<input type="number" id="stepover" step="1" value="' + settings.stepover + '">' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="overrun">Overrun (' + distanceUnit + ')</label>' +
+                    '<label for="overrun">Overrun</label>' +
                     '<input type="number" id="overrun" step="0.1" value="' + settings.overrun + '">' +
                   '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-card-title">Machine Settings <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<label for="bitDiameter">Bit Diameter</label>' +
                     '<input type="number" id="bitDiameter" step="0.1" value="' + settings.bitDiameter + '">' +
                   '</div>' +
                   '<div class="form-group">' +
@@ -1183,6 +1245,24 @@
           planerOriginInput.value = point.getAttribute('data-origin');
         });
       })(planerOriginPoints[poi]);
+    }
+
+    // Depth mode toggle — show/hide depth vs thickness fields
+    var depthModeSelect = document.getElementById('depthMode');
+    function updateDepthModeFields() {
+      var mode = depthModeSelect ? depthModeSelect.value : 'depth';
+      var depthFields = document.querySelectorAll('.depth-field');
+      var thicknessFields = document.querySelectorAll('.thickness-field');
+      for (var i = 0; i < depthFields.length; i++) {
+        depthFields[i].style.display = mode === 'depth' ? '' : 'none';
+      }
+      for (var j = 0; j < thicknessFields.length; j++) {
+        thicknessFields[j].style.display = mode === 'thickness' ? '' : 'none';
+      }
+    }
+    if (depthModeSelect) {
+      depthModeSelect.addEventListener('change', updateDepthModeFields);
+      updateDepthModeFields(); // Apply initial state
     }
 
     initPlanerLogic(isImperial);
@@ -1260,6 +1340,8 @@
       var spindleRpm = params.spindleRpm;
       var patternType = params.patternType, spindleDelay = params.spindleDelay;
       var mistM7 = params.mistM7, floodM8 = params.floodM8;
+      var depthMode = params.depthMode || 'depth';
+      var thicknessStartZ = params.thicknessStartZ || 0;
 
       var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
       var unitsCode = isImperial ? 'G20' : 'G21';
@@ -1267,6 +1349,7 @@
 
       var stepoverDistance = (bitDiameter * stepover) / 100;
       var numDepthPasses = Math.ceil(targetDepth / depthOfCut);
+      var isThicknessMode = depthMode === 'thickness';
       var selectedPattern = patternType || 'zigzagY';
       var invertOrientation = selectedPattern === 'zigzagX';
       var isSpiral = selectedPattern === 'spiral';
@@ -1280,13 +1363,19 @@
       var numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
 
       var gcode = [];
-      gcode.push('(Planer Operation)');
+      gcode.push('(Planer Operation' + (isThicknessMode ? ' - Thickness Mode' : '') + ')');
       gcode.push('(Start: X' + startX + ' Y' + startY + ')');
       gcode.push('(Dimensions: ' + xDimension + ' x ' + yDimension + ' ' + unitsLabel + ')');
       gcode.push('(Overrun: ' + overrun + unitsLabel + ')');
       gcode.push('(Actual Cut Area: ' + adjustedXDimension + ' x ' + adjustedYDimension + ' ' + unitsLabel + ')');
       gcode.push('(Bit Diameter: ' + bitDiameter + unitsLabel + ', Stepover: ' + stepover + '%)');
-      gcode.push('(Target Depth: ' + targetDepth + unitsLabel + ' in ' + numDepthPasses + ' passes)');
+      if (isThicknessMode) {
+        gcode.push('(Starting Thickness: ' + thicknessStartZ.toFixed(3) + unitsLabel + ', Target Thickness: ' + (thicknessStartZ - targetDepth).toFixed(3) + unitsLabel + ')');
+        gcode.push('(Material to remove: ' + targetDepth.toFixed(3) + unitsLabel + ' in ' + numDepthPasses + ' passes)');
+        gcode.push('(Z-zero = bottom of material / wasteboard)');
+      } else {
+        gcode.push('(Target Depth: ' + targetDepth + unitsLabel + ' in ' + numDepthPasses + ' passes)');
+      }
       gcode.push('(Feed Rate: ' + feedRate + unitsLabel + '/min, Spindle: ' + spindleRpm + 'RPM)');
       gcode.push('');
       gcode.push(unitsCode + ' ; ' + (isImperial ? 'Imperial' : 'Metric') + ' units');
@@ -1296,25 +1385,40 @@
       gcode.push('G53 G0 Z0 ; Move to machine Z0');
       gcode.push('');
 
+      // In thickness mode: Z values are positive (above wasteboard)
+      // First pass at startZ - depthOfCut, last pass at targetThickness
+      // In depth mode: Z values are negative (below material top)
       var currentDepth = 0;
       var previousDepth = 0;
       for (var depthPass = 0; depthPass < numDepthPasses; depthPass++) {
         previousDepth = currentDepth;
         currentDepth = Math.min(currentDepth + depthOfCut, targetDepth);
-        gcode.push('(Depth pass ' + (depthPass + 1) + '/' + numDepthPasses + ' - Z' + (-currentDepth).toFixed(3) + ')');
 
-        gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
+        var zPos;
+        if (isThicknessMode) {
+          zPos = thicknessStartZ - currentDepth;
+          gcode.push('(Pass ' + (depthPass + 1) + '/' + numDepthPasses + ' - Z' + zPos.toFixed(3) + ' = thickness ' + zPos.toFixed(3) + unitsLabel + ')');
+        } else {
+          zPos = -currentDepth;
+          gcode.push('(Depth pass ' + (depthPass + 1) + '/' + numDepthPasses + ' - Z' + zPos.toFixed(3) + ')');
+        }
 
         if (depthPass === 0) {
-          addStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: safeHeight, isImperial: isImperial, currentDepth: currentDepth, previousDepth: previousDepth, plungeFeedRate: plungeFeedRate });
+          gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
+          var startupDepth = isThicknessMode ? -(thicknessStartZ - currentDepth) : currentDepth;
+          var startupPrev = isThicknessMode ? -(thicknessStartZ) : previousDepth;
+          addStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: isThicknessMode ? (thicknessStartZ + 5).toFixed(3) : safeHeight, isImperial: isImperial, currentDepth: startupDepth, previousDepth: startupPrev, plungeFeedRate: plungeFeedRate });
         } else {
           var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
-          var td = -currentDepth;
-          var rapidDepth = -previousDepth + rapidClearance;
+          var previousZ = isThicknessMode ? (thicknessStartZ - previousDepth) : -previousDepth;
+          var td = isThicknessMode ? (thicknessStartZ - currentDepth) : -currentDepth;
+          var rapidZ = previousZ + rapidClearance;
+          var hopZ = isThicknessMode ? (previousZ + 5).toFixed(3) : safeHeight;
 
-          gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
-          if (rapidDepth > td) {
-            gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
+          gcode.push('G0 Z' + hopZ + ' ; Safety Z-hop above last pass');
+          gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
+          if (rapidZ > td) {
+            gcode.push('G0 Z' + rapidZ.toFixed(3) + ' ; Rapid to 2mm above previous surface');
           }
           gcode.push('G1 Z' + td.toFixed(3) + ' F' + plungeFeedRate + ' ; Plunge to depth');
         }
@@ -1424,11 +1528,15 @@
       var originInput = document.getElementById('planerOrigin');
       var origin = originInput ? originInput.value : 'bottom-left';
 
+      var depthMode = document.getElementById('depthMode') ? document.getElementById('depthMode').value : 'depth';
+
       var displayValues = {
         xDimension: parseFloat(document.getElementById('xDimension').value),
         yDimension: parseFloat(document.getElementById('yDimension').value),
         depthOfCut: parseFloat(document.getElementById('depthOfCut').value),
         targetDepth: parseFloat(document.getElementById('targetDepth').value),
+        startingThickness: parseFloat(document.getElementById('startingThickness').value) || 20,
+        targetThickness: parseFloat(document.getElementById('targetThickness').value) || 18,
         bitDiameter: parseFloat(document.getElementById('bitDiameter').value),
         stepover: parseFloat(document.getElementById('stepover').value),
         overrun: parseFloat(document.getElementById('overrun').value),
@@ -1449,8 +1557,11 @@
         planer: {
           xDimension: convertToMetric(displayValues.xDimension),
           yDimension: convertToMetric(displayValues.yDimension),
+          depthMode: depthMode,
           depthOfCut: convertToMetric(displayValues.depthOfCut),
           targetDepth: convertToMetric(displayValues.targetDepth),
+          startingThickness: convertToMetric(displayValues.startingThickness),
+          targetThickness: convertToMetric(displayValues.targetThickness),
           bitDiameter: convertToMetric(displayValues.bitDiameter),
           stepover: displayValues.stepover,
           overrun: convertToMetric(displayValues.overrun),
@@ -1477,13 +1588,25 @@
         case 'center': startX = -xDim / 2; startY = -yDim / 2; break;
       }
 
+      // For thickness mode, convert to depth-based parameters
+      // Starting thickness = first Z height, target thickness = final Z height
+      // totalRemoval = startingThickness - targetThickness, passes cut from top down
+      var effectiveTargetDepth = displayValues.targetDepth;
+      var thicknessStartZ = 0;
+      if (depthMode === 'thickness') {
+        effectiveTargetDepth = displayValues.startingThickness - displayValues.targetThickness;
+        thicknessStartZ = displayValues.startingThickness;
+      }
+
       var params = {
         startX: startX,
         startY: startY,
         xDimension: displayValues.xDimension,
         yDimension: displayValues.yDimension,
         depthOfCut: displayValues.depthOfCut,
-        targetDepth: displayValues.targetDepth,
+        targetDepth: effectiveTargetDepth,
+        depthMode: depthMode,
+        thicknessStartZ: thicknessStartZ,
         bitDiameter: displayValues.bitDiameter,
         stepover: displayValues.stepover,
         overrun: displayValues.overrun,
@@ -1530,7 +1653,7 @@
   // =========================================================================
   // JOINTER/CUTTER
   // =========================================================================
-  function renderJointer(isImperial, distanceUnit, feedRateUnit) {
+  function renderJointer(isImperial, distanceUnit, feedRateUnit, unitLabel) {
     var convertToDisplay = function(value) {
       return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : parseFloat(value.toFixed(3));
     };
@@ -1562,10 +1685,10 @@
           '<form id="jointerForm" novalidate>' +
             '<div class="form-cards-container">' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-card-title">Dimensions <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="edgeLength">Edge Length (' + distanceUnit + ')</label>' +
+                    '<label for="edgeLength">Edge Length</label>' +
                     '<input type="number" id="edgeLength" step="0.1" value="' + settings.edgeLength + '">' +
                   '</div>' +
                   '<div class="form-group">' +
@@ -1580,17 +1703,17 @@
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="depthOfCut">Depth of Cut (' + distanceUnit + ')</label>' +
+                    '<label for="depthOfCut">Depth of Cut</label>' +
                     '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="materialThickness">Material Thickness (' + distanceUnit + ')</label>' +
+                    '<label for="materialThickness">Material Thickness</label>' +
                     '<input type="number" id="materialThickness" step="0.1" value="' + settings.materialThickness + '">' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="trimWidth">Trim Width (' + distanceUnit + ')</label>' +
+                    '<label for="trimWidth">Trim Width</label>' +
                     '<input type="number" id="trimWidth" step="0.01" value="' + settings.trimWidth + '">' +
                   '</div>' +
                   '<div class="form-group">' +
@@ -1600,7 +1723,7 @@
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="leadInOutDistance">Lead-In/Out (' + distanceUnit + ')</label>' +
+                    '<label for="leadInOutDistance">Lead-In/Out</label>' +
                     '<input type="number" id="leadInOutDistance" step="0.1" value="' + settings.leadInOutDistance + '">' +
                   '</div>' +
                   '<div class="form-group">' +
@@ -1613,10 +1736,10 @@
                 '</div>' +
               '</div>' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-card-title">Machine Settings <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<label for="bitDiameter">Bit Diameter</label>' +
                     '<input type="number" id="bitDiameter" step="0.01" value="' + settings.bitDiameter + '">' +
                   '</div>' +
                   '<div class="form-group">' +
@@ -2004,7 +2127,7 @@
   // =========================================================================
   // BORING
   // =========================================================================
-  function renderBoring(isImperial, distanceUnit, feedRateUnit) {
+  function renderBoring(isImperial, distanceUnit, feedRateUnit, unitLabel) {
     var convertToDisplay = function(metricValue) {
       if (isImperial) {
         return (metricValue / 25.4).toFixed(4);
@@ -2043,7 +2166,7 @@
           '<form id="boringForm" novalidate>' +
             '<div class="form-cards-container">' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Dimensions</div>' +
+                '<div class="form-card-title">Dimensions <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
                     '<label for="shape">Shape</label>' +
@@ -2081,16 +2204,16 @@
                     '</div>' +
                   '</div>' +
                   '<div class="form-group round-fields ' + (settings.shape === 'rectangle' ? 'hidden' : '') + '">' +
-                    '<label for="diameter">Diameter (' + distanceUnit + ')</label>' +
+                    '<label for="diameter">Diameter</label>' +
                     '<input type="number" id="diameter" min="0.1" step="0.1" value="' + settings.diameter + '" required>' +
                   '</div>' +
                   '<div class="rect-fields ' + (settings.shape === 'rectangle' ? 'visible' : '') + '">' +
                     '<div class="form-group" style="margin-bottom: 16px;">' +
-                      '<label for="rectWidth">Width (' + distanceUnit + ')</label>' +
+                      '<label for="rectWidth">Width</label>' +
                       '<input type="number" id="rectWidth" min="0.1" step="0.1" value="' + settings.width + '">' +
                     '</div>' +
                     '<div class="form-group">' +
-                      '<label for="rectHeight">Height (' + distanceUnit + ')</label>' +
+                      '<label for="rectHeight">Height</label>' +
                       '<input type="number" id="rectHeight" min="0.1" step="0.1" value="' + settings.height + '">' +
                     '</div>' +
                   '</div>' +
@@ -2101,7 +2224,7 @@
                     '<input type="number" id="xCount" min="1" max="200" step="1" value="' + settings.xCount + '" required>' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="xDistance">X-Distance (' + distanceUnit + ')</label>' +
+                    '<label for="xDistance">X-Distance</label>' +
                     '<input type="number" id="xDistance" min="0.1" step="0.1" value="' + settings.xDistance + '" required>' +
                   '</div>' +
                 '</div>' +
@@ -2111,26 +2234,26 @@
                     '<input type="number" id="yCount" min="1" max="200" step="1" value="' + settings.yCount + '" required>' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="yDistance">Y-Distance (' + distanceUnit + ')</label>' +
+                    '<label for="yDistance">Y-Distance</label>' +
                     '<input type="number" id="yDistance" min="0.1" step="0.1" value="' + settings.yDistance + '" required>' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="depth">Depth (' + distanceUnit + ')</label>' +
+                    '<label for="depth">Depth</label>' +
                     '<input type="number" id="depth" min="0.1" step="0.1" value="' + settings.depth + '" required>' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="pitch">Pitch (' + distanceUnit + ')</label>' +
+                    '<label for="pitch">Pitch</label>' +
                     '<input type="number" id="pitch" min="0.1" max="10" step="0.1" value="' + settings.pitch + '" required>' +
                   '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="form-card">' +
-                '<div class="form-card-title">Machine Settings</div>' +
+                '<div class="form-card-title">Machine Settings <span class="unit-badge">' + distanceUnit + '</span></div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="bitDiameter">Bit Diameter (' + distanceUnit + ')</label>' +
+                    '<label for="bitDiameter">Bit Diameter</label>' +
                     '<input type="number" id="bitDiameter" min="0.1" step="0.01" value="' + settings.toolDiameter + '" required>' +
                   '</div>' +
                   '<div class="form-group">' +
