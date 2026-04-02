@@ -1,10 +1,6 @@
 ## What's Changed
 
 ### ✨ New Features
-- Added shape selector to the Boring tool for choosing different cut profiles
-- Added origin picker to the Boring tool for precise positioning control
-- Added rectangle cut support to the Boring tool
-- Added origin picker to the Planer tool
-
-### 🔧 Improvements
-- Fixed metric decimal precision in the Planer tool for more accurate measurements
+- Added Target Thickness mode to Planer for specifying desired final material thickness
+- Added unit badge display showing current measurement units in Planer
+- Added safety Z-hop movement to Planer operations for safer tool travel
