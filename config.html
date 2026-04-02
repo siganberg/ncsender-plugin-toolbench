@@ -85,6 +85,76 @@
     color: #fff;
     letter-spacing: 0.5px;
   }
+  /* Tooltip styles */
+  .tb-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .tb-tooltip-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    background: var(--color-accent);
+    color: white;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: help;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .tb-tooltip-trigger:hover,
+  .tb-tooltip-trigger:focus {
+    background: var(--color-accent-hover, var(--color-accent));
+    outline: none;
+  }
+  .tb-tooltip-content {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    padding: 12px 14px;
+    background: var(--color-accent);
+    color: white;
+    border-radius: var(--radius-small);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  .tb-tooltip-content::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: var(--color-accent);
+  }
+  .tb-tooltip-wrapper:hover .tb-tooltip-content,
+  .tb-tooltip-wrapper:focus-within .tb-tooltip-content,
+  .tb-tooltip-content.tb-tooltip-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  .mode-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--color-accent, #7c5cbf);
+    background: rgba(124, 92, 191, 0.08);
+    border-radius: 0 4px 4px 0;
+    line-height: 1.4;
+  }
   .planer-layout .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1133,7 +1203,7 @@
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
-                    '<label for="depthMode">Mode</label>' +
+                    '<label for="depthMode">Mode <span class="tb-tooltip-wrapper"><span class="tb-tooltip-trigger" tabindex="0">?</span><span class="tb-tooltip-content" id="modeTooltip">' + (settings.depthMode === 'thickness' ? 'Set Z0 at the wasteboard surface (bottom of material).' : 'Set Z0 at the top surface of the material.') + '</span></span></label>' +
                     '<select id="depthMode">' +
                       '<option value="depth"' + (settings.depthMode === 'depth' ? ' selected' : '') + '>Target Depth</option>' +
                       '<option value="thickness"' + (settings.depthMode === 'thickness' ? ' selected' : '') + '>Target Thickness</option>' +
@@ -1259,11 +1329,49 @@
       for (var j = 0; j < thicknessFields.length; j++) {
         thicknessFields[j].style.display = mode === 'thickness' ? '' : 'none';
       }
+      var tooltip = document.getElementById('modeTooltip');
+      if (tooltip) {
+        tooltip.textContent = mode === 'thickness'
+          ? 'Set Z0 at the wasteboard surface (bottom of material).'
+          : 'Set Z0 at the top surface of the material.';
+      }
     }
     if (depthModeSelect) {
       depthModeSelect.addEventListener('change', updateDepthModeFields);
       updateDepthModeFields(); // Apply initial state
     }
+
+    // Tooltip touch support - tap to toggle
+    var tbTooltipWrappers = document.querySelectorAll('.tb-tooltip-wrapper');
+    var tbActiveTooltip = null;
+    function tbHideAllTooltips() {
+      document.querySelectorAll('.tb-tooltip-content').forEach(function(t) {
+        t.classList.remove('tb-tooltip-visible');
+      });
+      tbActiveTooltip = null;
+    }
+    tbTooltipWrappers.forEach(function(wrapper) {
+      var trigger = wrapper.querySelector('.tb-tooltip-trigger');
+      var content = wrapper.querySelector('.tb-tooltip-content');
+      if (!trigger || !content) return;
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (tbActiveTooltip === content) {
+          content.classList.remove('tb-tooltip-visible');
+          tbActiveTooltip = null;
+        } else {
+          tbHideAllTooltips();
+          content.classList.add('tb-tooltip-visible');
+          tbActiveTooltip = content;
+        }
+      });
+    });
+    document.addEventListener('click', function(e) {
+      if (tbActiveTooltip && !e.target.closest('.tb-tooltip-wrapper')) {
+        tbHideAllTooltips();
+      }
+    });
 
     initPlanerLogic(isImperial);
   }
