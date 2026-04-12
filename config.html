@@ -1349,6 +1349,12 @@
           yDimInput.value = convertToDisplay(machineLimitY);
         }
       }
+      var overrunInput = document.getElementById('overrun');
+      if (overrunInput) {
+        overrunInput.readOnly = isWasteboard;
+        overrunInput.parentElement.style.opacity = isWasteboard ? '0.5' : '';
+        if (isWasteboard) overrunInput.value = 0;
+      }
     }
     // Fetch machine limits ($130/$131) for wasteboard mode
     fetch(BASE_URL + '/api/firmware').then(function(r) { return r.json(); }).then(function(fw) {
