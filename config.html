@@ -1141,6 +1141,8 @@
     var savedPlanerSettings = (initialConfig && initialConfig.planer) || {};
     var defaultPatternType = savedPlanerSettings.patternType != null ? savedPlanerSettings.patternType : (savedPlanerSettings.invertOrientation ? 'zigzagX' : 'zigzagY');
 
+    var machineLimitX = 0, machineLimitY = 0;
+
     var settings = {
       xDimension: convertToDisplay(savedPlanerSettings.xDimension != null ? savedPlanerSettings.xDimension : 100),
       yDimension: convertToDisplay(savedPlanerSettings.yDimension != null ? savedPlanerSettings.yDimension : 100),
@@ -1170,7 +1172,15 @@
             '<div class="form-cards-container">' +
               '<div class="form-card">' +
                 '<div class="form-card-title">Dimensions <span class="unit-badge">' + distanceUnit + '</span></div>' +
-                '<div class="form-row" style="align-items: flex-start;">' +
+                '<div class="form-group" style="margin-bottom: 12px;">' +
+                  '<label for="depthMode">Mode</label>' +
+                  '<select id="depthMode">' +
+                    '<option value="depth"' + (settings.depthMode === 'depth' ? ' selected' : '') + '>Target Depth</option>' +
+                    '<option value="thickness"' + (settings.depthMode === 'thickness' ? ' selected' : '') + '>Target Thickness</option>' +
+                    '<option value="wasteboard"' + (settings.depthMode === 'wasteboard' ? ' selected' : '') + '>Wasteboard Surfacing</option>' +
+                  '</select>' +
+                '</div>' +
+                '<div class="form-row" style="align-items: flex-start;" id="directionOriginRow">' +
                   '<div class="form-group">' +
                     '<label for="patternType">Direction</label>' +
                     '<select id="patternType">' +
@@ -1179,7 +1189,7 @@
                       '<option value="spiral"' + (settings.patternType === 'spiral' ? ' selected' : '') + '>Spiral</option>' +
                     '</select>' +
                   '</div>' +
-                  '<div class="origin-picker">' +
+                  '<div class="origin-picker" id="originPickerWrap">' +
                     '<label>Origin</label>' +
                     '<div class="origin-grid">' +
                       '<input type="hidden" id="planerOrigin" value="' + settings.origin + '">' +
@@ -1191,7 +1201,7 @@
                     '</div>' +
                   '</div>' +
                 '</div>' +
-                '<div class="form-row">' +
+                '<div class="form-row" id="dimensionRow">' +
                   '<div class="form-group">' +
                     '<label for="xDimension">X Dimension</label>' +
                     '<input type="number" id="xDimension" step="0.1" value="' + settings.xDimension + '">' +
@@ -1199,19 +1209,6 @@
                   '<div class="form-group">' +
                     '<label for="yDimension">Y Dimension</label>' +
                     '<input type="number" id="yDimension" step="0.1" value="' + settings.yDimension + '">' +
-                  '</div>' +
-                '</div>' +
-                '<div class="form-row">' +
-                  '<div class="form-group">' +
-                    '<label for="depthMode">Mode <span class="tb-tooltip-wrapper"><span class="tb-tooltip-trigger" tabindex="0">?</span><span class="tb-tooltip-content" id="modeTooltip">' + (settings.depthMode === 'thickness' ? 'Set Z0 at the wasteboard surface (bottom of material).' : 'Set Z0 at the top surface of the material.') + '</span></span></label>' +
-                    '<select id="depthMode">' +
-                      '<option value="depth"' + (settings.depthMode === 'depth' ? ' selected' : '') + '>Target Depth</option>' +
-                      '<option value="thickness"' + (settings.depthMode === 'thickness' ? ' selected' : '') + '>Target Thickness</option>' +
-                    '</select>' +
-                  '</div>' +
-                  '<div class="form-group">' +
-                    '<label for="depthOfCut">Depth of Cut</label>' +
-                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
                   '</div>' +
                 '</div>' +
                 '<div class="form-row depth-field">' +
@@ -1232,13 +1229,17 @@
                 '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
+                    '<label for="depthOfCut">Depth of Cut</label>' +
+                    '<input type="number" id="depthOfCut" step="0.1" value="' + settings.depthOfCut + '">' +
+                  '</div>' +
+                  '<div class="form-group">' +
                     '<label for="stepover">Stepover (%)</label>' +
                     '<input type="number" id="stepover" step="1" value="' + settings.stepover + '">' +
                   '</div>' +
-                  '<div class="form-group">' +
-                    '<label for="overrun">Overrun</label>' +
-                    '<input type="number" id="overrun" step="0.1" value="' + settings.overrun + '">' +
-                  '</div>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom: 12px;">' +
+                  '<label for="overrun">Overrun</label>' +
+                  '<input type="number" id="overrun" step="0.1" value="' + settings.overrun + '">' +
                 '</div>' +
               '</div>' +
               '<div class="form-card">' +
@@ -1317,25 +1318,45 @@
       })(planerOriginPoints[poi]);
     }
 
-    // Depth mode toggle — show/hide depth vs thickness fields
+    // Depth mode toggle — show/hide depth vs thickness fields + wasteboard mode
     var depthModeSelect = document.getElementById('depthMode');
     function updateDepthModeFields() {
       var mode = depthModeSelect ? depthModeSelect.value : 'depth';
+      var isWasteboard = mode === 'wasteboard';
       var depthFields = document.querySelectorAll('.depth-field');
       var thicknessFields = document.querySelectorAll('.thickness-field');
       for (var i = 0; i < depthFields.length; i++) {
-        depthFields[i].style.display = mode === 'depth' ? '' : 'none';
+        depthFields[i].style.display = (mode === 'depth' || isWasteboard) ? '' : 'none';
       }
       for (var j = 0; j < thicknessFields.length; j++) {
         thicknessFields[j].style.display = mode === 'thickness' ? '' : 'none';
       }
-      var tooltip = document.getElementById('modeTooltip');
-      if (tooltip) {
-        tooltip.textContent = mode === 'thickness'
-          ? 'Set Z0 at the wasteboard surface (bottom of material).'
-          : 'Set Z0 at the top surface of the material.';
+      // Wasteboard mode: disable origin + dimensions, populate from machine limits
+      var originWrap = document.getElementById('originPickerWrap');
+      var dimRow = document.getElementById('dimensionRow');
+      var xDimInput = document.getElementById('xDimension');
+      var yDimInput = document.getElementById('yDimension');
+      if (originWrap) {
+        originWrap.style.opacity = isWasteboard ? '0.3' : '';
+        originWrap.style.pointerEvents = isWasteboard ? 'none' : '';
+      }
+      if (dimRow && xDimInput && yDimInput) {
+        xDimInput.readOnly = isWasteboard;
+        yDimInput.readOnly = isWasteboard;
+        dimRow.style.opacity = isWasteboard ? '0.5' : '';
+        if (isWasteboard && machineLimitX > 0 && machineLimitY > 0) {
+          xDimInput.value = convertToDisplay(machineLimitX);
+          yDimInput.value = convertToDisplay(machineLimitY);
+        }
       }
     }
+    // Fetch machine limits ($130/$131) for wasteboard mode
+    fetch(BASE_URL + '/api/firmware').then(function(r) { return r.json(); }).then(function(fw) {
+      var s = fw && fw.settings;
+      if (s && s['130'] && s['130'].value) machineLimitX = parseFloat(s['130'].value);
+      if (s && s['131'] && s['131'].value) machineLimitY = parseFloat(s['131'].value);
+      updateDepthModeFields();
+    }).catch(function() {});
     if (depthModeSelect) {
       depthModeSelect.addEventListener('change', updateDepthModeFields);
       updateDepthModeFields(); // Apply initial state
@@ -1450,6 +1471,7 @@
       var mistM7 = params.mistM7, floodM8 = params.floodM8;
       var depthMode = params.depthMode || 'depth';
       var thicknessStartZ = params.thicknessStartZ || 0;
+      var isWasteboard = params.isWasteboard || false;
 
       var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
       var unitsCode = isImperial ? 'G20' : 'G21';
@@ -1470,8 +1492,20 @@
       var stepDimension = invertOrientation ? adjustedYDimension : adjustedXDimension;
       var numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
 
+      // Wasteboard mode: clamp overrun so we don't exceed machine limits
+      if (isWasteboard) {
+        overrun = 0;
+        adjustedStartX = startX;
+        adjustedStartY = startY;
+        adjustedXDimension = xDimension;
+        adjustedYDimension = yDimension;
+        stepDimension = invertOrientation ? adjustedYDimension : adjustedXDimension;
+        numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
+      }
+
       var gcode = [];
-      gcode.push('(Planer Operation' + (isThicknessMode ? ' - Thickness Mode' : '') + ')');
+      gcode.push('(Planer Operation' + (isWasteboard ? ' - Wasteboard Surfacing' : isThicknessMode ? ' - Thickness Mode' : '') + ')');
+      if (isWasteboard) gcode.push('(Machine Coordinates - Full travel area)');
       gcode.push('(Start: X' + startX + ' Y' + startY + ')');
       gcode.push('(Dimensions: ' + xDimension + ' x ' + yDimension + ' ' + unitsLabel + ')');
       gcode.push('(Overrun: ' + overrun + unitsLabel + ')');
@@ -1580,7 +1614,7 @@
 
           if (invertOrientation) {
             for (var pass = 0; pass < numPasses; pass++) {
-              var yPos = adjustedStartY + (pass * stepoverDistance);
+              var yPos = Math.min(adjustedStartY + (pass * stepoverDistance), adjustedStartY + adjustedYDimension);
               if (pass > 0) {
                 gcode.push('G1 Y' + yPos.toFixed(3) + ' F' + feedRate + ' ; Step over');
               }
@@ -1593,7 +1627,7 @@
             }
           } else {
             for (var pass = 0; pass < numPasses; pass++) {
-              var xPos = adjustedStartX + (pass * stepoverDistance);
+              var xPos = Math.min(adjustedStartX + (pass * stepoverDistance), adjustedStartX + adjustedXDimension);
               if (pass > 0) {
                 gcode.push('G1 X' + xPos.toFixed(3) + ' F' + feedRate + ' ; Step over');
               }
@@ -1689,11 +1723,19 @@
       var xDim = displayValues.xDimension;
       var yDim = displayValues.yDimension;
       var startX = 0, startY = 0;
-      switch (origin) {
-        case 'bottom-right': startX = -xDim; break;
-        case 'top-left': startY = -yDim; break;
-        case 'top-right': startX = -xDim; startY = -yDim; break;
-        case 'center': startX = -xDim / 2; startY = -yDim / 2; break;
+      var isWasteboard = depthMode === 'wasteboard';
+
+      if (isWasteboard) {
+        // Wasteboard: machine coordinates, start at 0,0 covering full travel
+        startX = 0;
+        startY = 0;
+      } else {
+        switch (origin) {
+          case 'bottom-right': startX = -xDim; break;
+          case 'top-left': startY = -yDim; break;
+          case 'top-right': startX = -xDim; startY = -yDim; break;
+          case 'center': startX = -xDim / 2; startY = -yDim / 2; break;
+        }
       }
 
       // For thickness mode, convert to depth-based parameters
@@ -1726,7 +1768,8 @@
         invertOrientation: invertOrientation,
         mistM7: displayValues.mistM7,
         floodM8: displayValues.floodM8,
-        isImperial: isImperial
+        isImperial: isImperial,
+        isWasteboard: isWasteboard
       };
 
       var gcode = generatePlanerGcode(params);
