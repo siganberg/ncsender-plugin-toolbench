@@ -1,5 +1,7 @@
 ## What's Changed
 
 ### ✨ New Features
-- Added Target Thickness mode to Planer with unit badge and safety Z-hop
-- Added touch-friendly tooltip on Mode selector for Z0 reference hint
+- Added Wasteboard Surfacing mode to the Planer tool
+
+### 🔧 Improvements
+- Overrun input is now automatically disabled when using Wasteboard Surfacing mode for a cleaner workflow
