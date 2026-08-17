@@ -118,7 +118,11 @@ Rules:
 Output ONLY the markdown. No preamble. No explanation. Just the markdown."
 
 # Use Claude CLI to generate release notes
-RELEASE_NOTES=$(claude -p "$PROMPT" 2>&1)
+# Only capture stdout — 2>&1 used to fold Claude CLI stderr warnings
+# (e.g. "no stdin data received in 3s...") into the release body. Stderr
+# still streams to the operator's terminal so real errors stay visible.
+# /dev/null for stdin skips the "no stdin data" warning entirely.
+RELEASE_NOTES=$(claude -p "$PROMPT" < /dev/null)
 CLAUDE_EXIT_CODE=$?
 
 if [ $CLAUDE_EXIT_CODE -ne 0 ] || [ -z "$RELEASE_NOTES" ]; then
