@@ -3017,7 +3017,11 @@
         }
       }
 
-      gcode.push('G53 G0 Z0 ; Return to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Return to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Return to machine Z0');
+      }
       if (mistM7 || floodM8) {
         gcode.push('M9 ; Coolant off');
       }
