@@ -2952,7 +2952,7 @@
             var rStartY = holeY - entryOffset;
             var rampXTravel = Math.max(arcStartX - rStartX, 0);
 
-            gcode.push('G0 X' + rStartX.toFixed(3) + ' Y' + rStartY.toFixed(3));
+            gcode.push('G0 X' + rStartX.toFixed(5) + ' Y' + rStartY.toFixed(5));
             gcode.push('G0 Z' + safeHeight);
 
             var slowPlungeStart = isImperial ? (2 * 0.0393701) : 2;
@@ -2968,11 +2968,21 @@
               var progress = step / leadInSteps;
               var xPos = rStartX + (rampXTravel * progress);
               var zPos = -(startDepth + (rampDepthDiff * progress));
-              gcode.push('X' + xPos.toFixed(3) + ' Z' + zPos.toFixed(3));
+              gcode.push('X' + xPos.toFixed(5) + ' Z' + zPos.toFixed(3));
             }
 
+            // Arc lines emit endpoints AND I/J offsets at 5 decimals so
+            // the start-radius and end-radius stay self-consistent under
+            // grblHAL's arc tolerance ($12, default ~0.00008"). At the
+            // previous toFixed(3), an endpoint like -0.0625 rounded to
+            // -0.063 while pathRadius 0.15625 rounded to 0.156 — the two
+            // different rounding directions compounded into a 0.001"
+            // radius mismatch and grblHAL rejected the block as
+            // error:33 "Motion command target is invalid". General G0/G1
+            // positions stay at 3 decimals — grbl doesn't cross-check
+            // those.
             var arcCenterYOffset = entryOffset;
-            gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I0 J' + arcCenterYOffset.toFixed(3) + ' F' + feedRate);
+            gcode.push('G3 X' + (holeX + pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I0 J' + arcCenterYOffset.toFixed(5) + ' F' + feedRate);
 
             var currentDepth = rampTargetDepth;
             var depthTolerance = 1e-6;
@@ -2981,24 +2991,24 @@
 
             while (currentDepth < depth - depthTolerance) {
               var firstHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
-              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 Z' + (-firstHalfDepth).toFixed(3) + ' F' + feedRate);
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + (-pathRadius).toFixed(5) + ' J0 Z' + (-firstHalfDepth).toFixed(3) + ' F' + feedRate);
               currentDepth = firstHalfDepth;
               atPlusX = false;
 
               if (currentDepth >= depth - depthTolerance) break;
 
               var secondHalfDepth = Math.min(depth, currentDepth + zIncrementPerSemicircle);
-              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 Z' + (-secondHalfDepth).toFixed(3) + ' F' + feedRate);
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + pathRadius.toFixed(5) + ' J0 Z' + (-secondHalfDepth).toFixed(3) + ' F' + feedRate);
               currentDepth = secondHalfDepth;
               atPlusX = true;
             }
 
             if (atPlusX) {
-              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
-              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + (-pathRadius).toFixed(5) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + pathRadius.toFixed(5) + ' J0 F' + feedRate);
             } else {
-              gcode.push('G3 X' + (holeX + pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + pathRadius.toFixed(3) + ' J0 F' + feedRate);
-              gcode.push('G3 X' + (holeX - pathRadius).toFixed(3) + ' Y' + holeY.toFixed(3) + ' I' + (-pathRadius).toFixed(3) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX + pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + pathRadius.toFixed(5) + ' J0 F' + feedRate);
+              gcode.push('G3 X' + (holeX - pathRadius).toFixed(5) + ' Y' + holeY.toFixed(5) + ' I' + (-pathRadius).toFixed(5) + ' J0 F' + feedRate);
             }
 
             gcode.push('G0 Z' + safeHeight);
