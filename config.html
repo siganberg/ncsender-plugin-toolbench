@@ -988,9 +988,16 @@
       var distanceUnit = isImperial ? 'in' : 'mm';
       var unitLabel = isImperial ? 'Inches' : 'Metric';
       var feedRateUnit = isImperial ? 'in/min' : 'mm/min';
+      // Core-configured safe Z (machine coords, mm, negative). When
+      // present the planer emits retracts as `G53 G0 Z<val>` so the
+      // operator's configured safe travel plane is respected instead of
+      // the plugin inventing its own. `null` → fall back to a
+      // workpiece-relative retract above the top of the starting stock.
+      var _safeZRaw = Number(appSettings.safeZHeight);
+      var safeZHeightMm = isFinite(_safeZRaw) ? _safeZRaw : null;
 
       if (TOOL_LABEL === 'Planer') {
-        renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel);
+        renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel, safeZHeightMm);
       } else if (TOOL_LABEL === 'Jointer/Cutter') {
         renderJointer(isImperial, distanceUnit, feedRateUnit, unitLabel);
       } else if (TOOL_LABEL === 'Boring') {
@@ -1133,7 +1140,7 @@
   // =========================================================================
   // PLANER
   // =========================================================================
-  function renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel) {
+  function renderPlaner(isImperial, distanceUnit, feedRateUnit, unitLabel, safeZHeightMm) {
     var convertToDisplay = function(value) {
       return isImperial ? parseFloat((value * MM_TO_INCH).toFixed(4)) : parseFloat(value.toFixed(3));
     };
@@ -1400,10 +1407,10 @@
       }
     });
 
-    initPlanerLogic(isImperial);
+    initPlanerLogic(isImperial, safeZHeightMm);
   }
 
-  function initPlanerLogic(isImperial) {
+  function initPlanerLogic(isImperial, safeZHeightMm) {
     var validationRules = isImperial ? {
       xDimension: { min: 0.5, max: Infinity, label: 'X Dimension' },
       yDimension: { min: 0.5, max: Infinity, label: 'Y Dimension' },
@@ -1435,6 +1442,19 @@
     var validateAllInputs = makeValidateAllInputs(validationRules, validateInput, showTooltip);
     attachInputListeners(validationRules, validateInput, showTooltip, hideTooltip);
 
+    // Planer g-code generator.
+    //
+    // MUST STAY IN SYNC WITH lib/planer-gcode.cjs — that file is the test
+    // fixture (Node can't load config.html, so we duplicate the code
+    // here). Every fix to the generator must be applied to BOTH files.
+    // See tests/planer-gcode.test.cjs for behavior specs.
+
+    // 5 mm above the reference plane, converted to the active unit.
+    // Reference plane = workpiece Z0 in depth mode, top of starting stock
+    // in thickness mode (see safeHopZ derivation in the generator).
+    var _safeHopDelta = isImperial ? (5 * 0.0393701) : 5;
+    var _rapidClearance = isImperial ? (2 * 0.0393701) : 2;
+
     function addStartupSequence(gcode, options) {
       var mistM7 = options.mistM7, floodM8 = options.floodM8, spindleRpm = options.spindleRpm;
       var spindleDelay = options.spindleDelay, safeHeight = options.safeHeight;
@@ -1453,11 +1473,14 @@
       if (spindleRpm > 0 && spindleDelay > 0) {
         gcode.push('G4 P' + spindleDelay + ' ; Wait ' + spindleDelay + ' seconds');
       }
+      // Startup rapid stays workpiece-relative — the rapid-down + G1 plunge
+      // sequence below assumes we start above the material at a reasonable
+      // distance, not from machine top. Core safeZHeight is used only for
+      // end-of-pass retracts, not for the initial approach.
       gcode.push('G0 Z' + safeHeight + ' ; Rapid to safe height');
 
-      var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
       var targetDepth = -currentDepth;
-      var rapidDepth = -(previousDepth || 0) - rapidClearance;
+      var rapidDepth = -(previousDepth || 0) - _rapidClearance;
 
       if (rapidDepth > targetDepth) {
         gcode.push('G0 Z' + rapidDepth.toFixed(3) + ' ; Rapid to 2mm above previous surface');
@@ -1478,10 +1501,17 @@
       var depthMode = params.depthMode || 'depth';
       var thicknessStartZ = params.thicknessStartZ || 0;
       var isWasteboard = params.isWasteboard || false;
+      var coreSafeZMm = typeof params.safeZHeightMm === 'number' && isFinite(params.safeZHeightMm)
+        ? params.safeZHeightMm
+        : null;
 
-      var safeHeight = isImperial ? (5 * 0.0393701).toFixed(3) : '5.000';
+      var safeHeight = _safeHopDelta.toFixed(3);
       var unitsCode = isImperial ? 'G20' : 'G21';
       var unitsLabel = isImperial ? 'inch' : 'mm';
+
+      var coreSafeZLine = coreSafeZMm !== null
+        ? 'G53 G0 Z' + (isImperial ? (coreSafeZMm * 0.0393701) : coreSafeZMm).toFixed(3)
+        : null;
 
       var stepoverDistance = (bitDiameter * stepover) / 100;
       var numDepthPasses = Math.ceil(targetDepth / depthOfCut);
@@ -1489,6 +1519,10 @@
       var selectedPattern = patternType || 'zigzagY';
       var invertOrientation = selectedPattern === 'zigzagX';
       var isSpiral = selectedPattern === 'spiral';
+
+      var safeHopZ = isThicknessMode
+        ? (thicknessStartZ + _safeHopDelta).toFixed(3)
+        : safeHeight;
 
       var adjustedStartX = startX - overrun;
       var adjustedStartY = startY - overrun;
@@ -1498,7 +1532,6 @@
       var stepDimension = invertOrientation ? adjustedYDimension : adjustedXDimension;
       var numPasses = Math.ceil(stepDimension / stepoverDistance) + 1;
 
-      // Wasteboard mode: clamp overrun so we don't exceed machine limits
       if (isWasteboard) {
         overrun = 0;
         adjustedStartX = startX;
@@ -1530,12 +1563,13 @@
       gcode.push('G90 ; Absolute positioning');
       gcode.push('G94 ; Feed rate per minute');
       gcode.push('');
-      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Move to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      }
       gcode.push('');
 
-      // In thickness mode: Z values are positive (above wasteboard)
-      // First pass at startZ - depthOfCut, last pass at targetThickness
-      // In depth mode: Z values are negative (below material top)
       var currentDepth = 0;
       var previousDepth = 0;
       for (var depthPass = 0; depthPass < numDepthPasses; depthPass++) {
@@ -1555,13 +1589,17 @@
           gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
           var startupDepth = isThicknessMode ? -(thicknessStartZ - currentDepth) : currentDepth;
           var startupPrev = isThicknessMode ? -(thicknessStartZ) : previousDepth;
-          addStartupSequence(gcode, { mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay, safeHeight: isThicknessMode ? (thicknessStartZ + 5).toFixed(3) : safeHeight, isImperial: isImperial, currentDepth: startupDepth, previousDepth: startupPrev, plungeFeedRate: plungeFeedRate });
+          addStartupSequence(gcode, {
+            mistM7: mistM7, floodM8: floodM8, spindleRpm: spindleRpm, spindleDelay: spindleDelay,
+            safeHeight: safeHopZ,
+            isImperial: isImperial, currentDepth: startupDepth, previousDepth: startupPrev,
+            plungeFeedRate: plungeFeedRate
+          });
         } else {
-          var rapidClearance = isImperial ? (2 * 0.0393701) : 2;
           var previousZ = isThicknessMode ? (thicknessStartZ - previousDepth) : -previousDepth;
           var td = isThicknessMode ? (thicknessStartZ - currentDepth) : -currentDepth;
-          var rapidZ = previousZ + rapidClearance;
-          var hopZ = isThicknessMode ? (previousZ + 5).toFixed(3) : safeHeight;
+          var rapidZ = previousZ + _rapidClearance;
+          var hopZ = isThicknessMode ? (previousZ + _safeHopDelta).toFixed(3) : safeHeight;
 
           gcode.push('G0 Z' + hopZ + ' ; Safety Z-hop above last pass');
           gcode.push('G0 X' + adjustedStartX.toFixed(3) + ' Y' + adjustedStartY.toFixed(3) + ' ; Move to start position');
@@ -1647,11 +1685,19 @@
           }
         }
 
-        gcode.push('G0 Z' + safeHeight + ' ; Retract to safe height');
+        if (coreSafeZLine) {
+          gcode.push(coreSafeZLine + ' ; Retract to core safe Z');
+        } else {
+          gcode.push('G0 Z' + safeHopZ + ' ; Retract to safe height');
+        }
         gcode.push('');
       }
 
-      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Move to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      }
       if (mistM7 || floodM8) {
         gcode.push('M9 ; Coolant off');
       }
@@ -1775,7 +1821,11 @@
         mistM7: displayValues.mistM7,
         floodM8: displayValues.floodM8,
         isImperial: isImperial,
-        isWasteboard: isWasteboard
+        isWasteboard: isWasteboard,
+        // Core-configured safe Z in machine coords (mm, negative), from
+        // /api/settings. null → plugin falls back to workpiece-relative
+        // retract that clears the top of the starting stock.
+        safeZHeightMm: safeZHeightMm
       };
 
       var gcode = generatePlanerGcode(params);
@@ -2049,7 +2099,11 @@
       gcode.push('G90 ; Absolute positioning');
       gcode.push('G94 ; Feed rate per minute');
       gcode.push('');
-      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Move to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      }
       gcode.push('');
 
       for (var pass = 0; pass < numberOfPasses; pass++) {
@@ -2168,7 +2222,11 @@
         gcode.push('');
       }
 
-      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Move to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      }
       if (mistM7 || floodM8) {
         gcode.push('M9 ; Coolant off');
       }
@@ -2736,7 +2794,11 @@
       gcode.push('G90 ; Absolute positioning');
       gcode.push('G94 ; Feed rate per minute');
       gcode.push('');
-      gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      if (coreSafeZLine) {
+        gcode.push(coreSafeZLine + ' ; Move to safe Z');
+      } else {
+        gcode.push('G53 G0 Z0 ; Move to machine Z0');
+      }
       gcode.push('');
 
       var itemNumber = 0;

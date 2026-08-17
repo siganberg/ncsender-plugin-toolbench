@@ -1,0 +1,16 @@
+{
+  "name": "ncsender-plugin-toolbench",
+  "version": "0.1.23",
+  "description": "ncSender ToolBench plugin — surfacing, jointer/cutter, boring g-code generators",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "author": "ncSender",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siganberg/ncsender-plugin-toolbench"
+  }
+}

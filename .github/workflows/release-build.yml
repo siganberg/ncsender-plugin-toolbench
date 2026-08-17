@@ -18,6 +18,13 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tests
+        run: npm test
+
       - name: Get plugin info
         id: plugin_info
         run: |
