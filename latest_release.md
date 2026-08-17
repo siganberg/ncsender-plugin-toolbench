@@ -1,5 +1,5 @@
 ## What's Changed
 
-### 🐛 Bug Fixes
-- Planer now generates correct safe-Z moves when working in imperial units
-- Planer respects the safe Z height configured in ncSender settings instead of using its own value
+### 🔧 Improvements
+- Jointer and Boring operations now respect the safe Z height configured in ncSender's core settings, so retract moves match the rest of the app
+- Boring now accepts finer pitch values, giving more control over slow, precise plunge passes
