@@ -1,7 +1,6 @@
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
 ## What's Changed
 
-### ✨ New Features
-- Added Wasteboard Surfacing mode to the Planer tool
-
-### 🔧 Improvements
-- Overrun input is now automatically disabled when using Wasteboard Surfacing mode for a cleaner workflow
+### 🐛 Bug Fixes
+- Planer now generates correct safe-Z moves when working in imperial units
+- Planer respects the safe Z height configured in ncSender settings instead of using its own value
